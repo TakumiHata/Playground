@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TodoListComponent } from './todo-list.component';
+import { PrerenderComponent } from './prerender.component';
 
-describe('TodoListComponent', () => {
-  let component: TodoListComponent;
-  let fixture: ComponentFixture<TodoListComponent>;
+describe('PrerenderComponent', () => {
+  let component: PrerenderComponent;
+  let fixture: ComponentFixture<PrerenderComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TodoListComponent]
+      imports: [PrerenderComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TodoListComponent);
+    fixture = TestBed.createComponent(PrerenderComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
