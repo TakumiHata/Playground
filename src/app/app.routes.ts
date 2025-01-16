@@ -19,11 +19,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'server',
-    loadComponent: () =>
-      import('./pages/server/server.component').then((c) => c.ServerComponent),
-  },
-  {
     path: 'client',
     loadComponent: () =>
       import('./pages/client/client.component').then((c) => c.ClientComponent),
