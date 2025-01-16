@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'server', pathMatch: 'full' },
+  { path: '', redirectTo: '', pathMatch: 'full' },
   {
     /** ログイン */
     path: 'login',
