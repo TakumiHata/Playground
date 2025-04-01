@@ -1,9 +1,0 @@
-version: "3"
-services:
-  node:
-    build: ./docker/web
-    ports:
-      - "4200:4200"
-    volumes:
-      - ".:/projects"
-    tty: true
