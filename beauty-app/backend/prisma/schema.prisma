@@ -8,38 +8,62 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String
-  name          String
-  role          Role      @default(USER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  bookings      Booking[]
-  reviews       Review[]
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String
+  phone     String?
+  address   String?
+  avatar    String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
+  favorites Favorite[]
 }
 
 model Product {
-  id              String    @id @default(uuid())
-  name            String
-  description     String
-  price           Float
-  imageUrl        String?
-  category        String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  reviews         Review[]
-  recommendations  Recommendation[]
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  price       Int
+  image       String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  favorites   Favorite[]
+}
+
+model Service {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  duration    Int       // 分単位
+  price       Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
 }
 
 model Booking {
-  id          String    @id @default(uuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  date        DateTime
-  status      BookingStatus @default(PENDING)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  serviceId Int
+  date      DateTime
+  status    String   @default("pending") // pending, confirmed, completed, cancelled
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  service   Service  @relation(fields: [serviceId], references: [id])
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
 }
 
 model Review {
