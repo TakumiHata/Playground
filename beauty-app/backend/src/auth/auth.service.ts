@@ -26,19 +26,21 @@ export class AuthService {
     };
   }
 
-  async register(data: {
-    email: string;
-    password: string;
-    name: string;
-    phone?: string;
-    address?: string;
-  }) {
-    const existingUser = await this.usersService.findByEmail(data.email);
+  async register(email: string, password: string, name: string, phone?: string, address?: string) {
+    const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
-      throw new UnauthorizedException('このメールアドレスは既に登録されています');
+      throw new UnauthorizedException('Email already exists');
     }
 
-    const user = await this.usersService.create(data);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await this.usersService.create({
+      email,
+      password: hashedPassword,
+      name,
+      phone,
+      address,
+    });
+
     return this.login(user);
   }
 } 
