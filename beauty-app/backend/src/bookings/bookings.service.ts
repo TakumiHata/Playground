@@ -1,56 +1,46 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
-import { Booking, Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class BookingsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: Prisma.BookingCreateInput): Promise<Booking> {
-    return this.prisma.booking.create({ data });
-  }
-
-  async findAll(): Promise<Booking[]> {
-    return this.prisma.booking.findMany({
-      include: {
-        user: true,
-        product: true,
+  async create(userId: string, data: Prisma.BookingCreateInput) {
+    return this.prisma.booking.create({
+      data: {
+        ...data,
+        user: {
+          connect: { id: userId },
+        },
       },
     });
   }
 
-  async findOne(id: number): Promise<Booking | null> {
+  async findAll() {
+    return this.prisma.booking.findMany();
+  }
+
+  async findOne(id: string) {
     return this.prisma.booking.findUnique({
       where: { id },
-      include: {
-        user: true,
-        product: true,
-      },
     });
   }
 
-  async findByUser(userId: string): Promise<Booking[]> {
+  async findByUserId(userId: string) {
     return this.prisma.booking.findMany({
       where: { userId },
-      include: {
-        user: true,
-        product: true,
-      },
     });
   }
 
-  async update(id: number, data: Prisma.BookingUpdateInput): Promise<Booking> {
+  async update(id: string, data: Prisma.BookingUpdateInput) {
     return this.prisma.booking.update({
       where: { id },
       data,
-      include: {
-        user: true,
-        product: true,
-      },
     });
   }
 
-  async remove(id: number): Promise<Booking> {
+  async remove(id: string) {
     return this.prisma.booking.delete({
       where: { id },
     });

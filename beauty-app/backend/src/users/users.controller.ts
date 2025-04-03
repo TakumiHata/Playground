@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Put, Delete, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { GetUser } from '../auth/get-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { GetUser } from '../auth/decorators/get-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -21,19 +21,14 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(@GetUser() user: any) {
-    return this.usersService.findById(user.id);
+    return this.usersService.findOne(user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put('me')
   async updateProfile(
     @GetUser() user: any,
-    @Body() data: {
-      name?: string;
-      phone?: string;
-      address?: string;
-      avatar?: string;
-    },
+    @Body() data: { name?: string; phone?: string; address?: string; avatar?: string }
   ) {
     return this.usersService.update(user.id, data);
   }
@@ -41,6 +36,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Delete('me')
   async deleteProfile(@GetUser() user: any) {
-    return this.usersService.delete(user.id);
+    return this.usersService.remove(user.id);
   }
 } 
