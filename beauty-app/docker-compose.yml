@@ -1,4 +1,5 @@
-version: "3"
+version: '3.8'
+
 services:
   backend:
     build: ./backend
@@ -8,19 +9,20 @@ services:
       - ./backend:/app
       - /app/node_modules
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - NODE_ENV=development
+      - DATABASE_URL=mysql://root:password@db:3306/beauty_salon
     depends_on:
       - db
 
   frontend:
     build: ./frontend
     ports:
-      - "3001:3000"
+      - "3001:3001"
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    environment:
+      - NODE_ENV=development
     depends_on:
       - backend
 
@@ -29,10 +31,8 @@ services:
     ports:
       - "3306:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=beauty_app
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=beauty_salon
     volumes:
       - mysql_data:/var/lib/mysql
 

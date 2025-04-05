@@ -1,47 +1,36 @@
 import React from 'react';
-import { Box, AppBar, Toolbar, Typography, Container, IconButton, Button } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
-import { Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { AppBar, Toolbar, Button, Box, Container } from '@mui/material';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const navigate = useNavigate();
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static">
         <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            ビューティーアプリ
-          </Typography>
-          <Button color="inherit" component={RouterLink} to="/">
+          <Button color="inherit" onClick={() => navigate('/')}>
             ホーム
           </Button>
-          <Button color="inherit" component={RouterLink} to="/dashboard">
+          <Button color="inherit" onClick={() => navigate('/dashboard')}>
             ダッシュボード
           </Button>
-          <Button color="inherit" component={RouterLink} to="/products">
-            商品
+          <Button color="inherit" onClick={() => navigate('/products')}>
+            商品一覧
           </Button>
-          <Button color="inherit" component={RouterLink} to="/bookings">
-            予約
+          <Button color="inherit" onClick={() => navigate('/bookings')}>
+            予約管理
           </Button>
-          <Button color="inherit" component={RouterLink} to="/profile">
+          <Button color="inherit" onClick={() => navigate('/profile')}>
             プロフィール
           </Button>
         </Toolbar>
       </AppBar>
-      <Container component="main" sx={{ mt: 4, mb: 4, flex: 1 }}>
+      <Container component="main" sx={{ flexGrow: 1, py: 4 }}>
         {children}
       </Container>
     </Box>

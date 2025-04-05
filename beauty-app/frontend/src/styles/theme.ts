@@ -3,14 +3,10 @@ import { createTheme } from '@mui/material/styles';
 export const theme = createTheme({
   palette: {
     primary: {
-      main: '#FF69B4', // ピンク
-      light: '#FFB6C1',
-      dark: '#DB7093',
+      main: '#4a90e2',
     },
     secondary: {
-      main: '#FFC0CB',
-      light: '#FFE4E1',
-      dark: '#FFB6C1',
+      main: '#f50057',
     },
     background: {
       default: '#FFF5F8',
@@ -19,8 +15,11 @@ export const theme = createTheme({
   },
   typography: {
     fontFamily: [
-      'Noto Sans JP',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
       'Roboto',
+      '"Helvetica Neue"',
       'Arial',
       'sans-serif',
     ].join(','),

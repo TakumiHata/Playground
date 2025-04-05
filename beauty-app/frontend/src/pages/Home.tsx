@@ -7,6 +7,9 @@ const Home: React.FC = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         ようこそ
       </Typography>
+      <Typography variant="body1" paragraph>
+        ビューティーサロン管理システムへようこそ。
+      </Typography>
       
       <Grid container spacing={4}>
         <Grid item xs={12} md={6}>

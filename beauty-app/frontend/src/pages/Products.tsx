@@ -7,6 +7,9 @@ const Products: React.FC = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         商品一覧
       </Typography>
+      <Typography variant="body1" paragraph>
+        商品一覧ページです。
+      </Typography>
 
       <Box sx={{ mb: 4 }}>
         <TextField
