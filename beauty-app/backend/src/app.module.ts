@@ -1,20 +1,28 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaService } from './prisma/prisma.service';
-import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { ProductsModule } from './products/products.module';
-import { BookingsModule } from './bookings/bookings.module';
+import { UsersModule } from './users/users.module';
+import { ReservationsModule } from './reservations/reservations.module';
+import { StaffModule } from './staff/staff.module';
+import { ServicesModule } from './services/services.module';
+import { PrismaService } from './prisma/prisma.service';
+import { validate } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate,
+      validationOptions: {
+        allowUnknown: false,
+        abortEarly: true,
+      },
     }),
-    UsersModule,
     AuthModule,
-    ProductsModule,
-    BookingsModule,
+    UsersModule,
+    ReservationsModule,
+    StaffModule,
+    ServicesModule,
   ],
   providers: [PrismaService],
 })
