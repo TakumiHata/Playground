@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('services')
 export class ServiceSchema {
@@ -8,21 +8,21 @@ export class ServiceSchema {
   @Column()
   name: string;
 
-  @Column('text')
+  @Column()
   description: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
-  @Column('int')
-  durationInMinutes: number;
+  @Column()
+  duration: number;
 
   @Column({ default: true })
   isActive: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn()
   updatedAt: Date;
 } 

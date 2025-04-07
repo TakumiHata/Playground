@@ -1,25 +1,14 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { ReservationsModule } from './reservations/reservations.module';
-import { StaffModule } from './staff/staff.module';
-import { ServicesModule } from './services/services.module';
-import { PrismaService } from './prisma/prisma.service';
-import { validate } from './config/env.validation';
-import { ReservationSchema } from './core/infrastructure/persistence/typeorm/entities/reservation.schema';
-import { TypeOrmReservationRepository } from './core/infrastructure/persistence/typeorm/repositories/reservation.repository';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersModule } from './core/users.module';
+import { AuthModule } from './core/auth.module';
+import { ServicesModule } from './core/services.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validate,
-      validationOptions: {
-        allowUnknown: false,
-        abortEarly: true,
-      },
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -29,25 +18,14 @@ import { TypeOrmReservationRepository } from './core/infrastructure/persistence/
         ssl: {
           rejectUnauthorized: false,
         },
-        entities: [ReservationSchema],
+        entities: [__dirname + '/**/*.schema{.ts,.js}'],
         synchronize: configService.get('NODE_ENV') !== 'production',
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([ReservationSchema]),
-    AuthModule,
     UsersModule,
-    ReservationsModule,
-    StaffModule,
+    AuthModule,
     ServicesModule,
   ],
-  providers: [
-    PrismaService,
-    {
-      provide: 'IReservationRepository',
-      useClass: TypeOrmReservationRepository,
-    },
-  ],
-  exports: ['IReservationRepository'],
 })
 export class AppModule {} 

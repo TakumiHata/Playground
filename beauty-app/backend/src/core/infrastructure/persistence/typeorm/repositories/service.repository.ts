@@ -13,23 +13,25 @@ export class TypeOrmServiceRepository implements IServiceRepository {
   ) {}
 
   async findById(id: string): Promise<Service | null> {
-    const schema = await this.repository.findOne({ where: { id } });
-    return schema ? this.toDomain(schema) : null;
+    const service = await this.repository.findOne({ where: { id } });
+    return service ? this.toDomain(service) : null;
   }
 
   async findAll(): Promise<Service[]> {
-    const schemas = await this.repository.find();
-    return schemas.map(this.toDomain);
+    const services = await this.repository.find();
+    return services.map(this.toDomain);
   }
 
-  async save(service: Service): Promise<void> {
+  async create(service: Service): Promise<Service> {
     const schema = this.toSchema(service);
-    await this.repository.save(schema);
+    const saved = await this.repository.save(schema);
+    return this.toDomain(saved);
   }
 
-  async update(service: Service): Promise<void> {
+  async update(id: string, service: Service): Promise<Service> {
     const schema = this.toSchema(service);
-    await this.repository.update(schema.id, schema);
+    await this.repository.update(id, schema);
+    return this.findById(id);
   }
 
   async delete(id: string): Promise<void> {
@@ -37,28 +39,28 @@ export class TypeOrmServiceRepository implements IServiceRepository {
   }
 
   private toDomain(schema: ServiceSchema): Service {
-    return Service.create({
-      id: schema.id,
-      name: schema.name,
-      description: schema.description,
-      price: schema.price,
-      durationInMinutes: schema.durationInMinutes,
-      isActive: schema.isActive,
-      createdAt: schema.createdAt,
-      updatedAt: schema.updatedAt,
-    });
+    const service = new Service();
+    service.id = schema.id;
+    service.name = schema.name;
+    service.description = schema.description;
+    service.price = schema.price;
+    service.duration = schema.duration;
+    service.isActive = schema.isActive;
+    service.createdAt = schema.createdAt;
+    service.updatedAt = schema.updatedAt;
+    return service;
   }
 
-  private toSchema(domain: Service): ServiceSchema {
+  private toSchema(service: Service): ServiceSchema {
     const schema = new ServiceSchema();
-    schema.id = domain.id;
-    schema.name = domain.name;
-    schema.description = domain.description;
-    schema.price = domain.price;
-    schema.durationInMinutes = domain.durationInMinutes;
-    schema.isActive = domain.isActive;
-    schema.createdAt = domain.createdAt;
-    schema.updatedAt = domain.updatedAt;
+    schema.id = service.id;
+    schema.name = service.name;
+    schema.description = service.description;
+    schema.price = service.price;
+    schema.duration = service.duration;
+    schema.isActive = service.isActive;
+    schema.createdAt = service.createdAt;
+    schema.updatedAt = service.updatedAt;
     return schema;
   }
 } 

@@ -15,7 +15,7 @@ export class Service {
   price: number;
 
   @Column()
-  duration: number; // 分単位
+  duration: number;
 
   @Column({ default: true })
   isActive: boolean;
@@ -25,4 +25,10 @@ export class Service {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  constructor() {
+    this.isActive = true;
+    this.createdAt = new Date();
+    this.updatedAt = new Date();
+  }
 } 

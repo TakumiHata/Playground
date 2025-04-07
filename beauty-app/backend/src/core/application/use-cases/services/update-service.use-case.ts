@@ -1,31 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { IServiceRepository } from '../../../domain/repositories/service.repository.interface';
 import { Service } from '../../../domain/entities/service.entity';
-import { ServiceNotFoundException } from '../../../domain/exceptions/service-not-found.exception';
 import { UpdateServiceRequestDto } from '../../../infrastructure/dto/services/update-service-request.dto';
 
 @Injectable()
 export class UpdateServiceUseCase {
-  constructor(private readonly serviceRepository: IServiceRepository) {}
+  constructor(
+    @Inject('SERVICE_REPOSITORY')
+    private readonly serviceRepository: IServiceRepository,
+  ) {}
 
-  async execute(id: string, request: UpdateServiceRequestDto): Promise<Service> {
+  async execute(id: string, updateServiceDto: UpdateServiceRequestDto): Promise<Service> {
     const service = await this.serviceRepository.findById(id);
     if (!service) {
-      throw new ServiceNotFoundException(id);
+      throw new NotFoundException(`Service with ID ${id} not found`);
     }
 
-    const updatedService = await this.serviceRepository.update(id, {
-      name: request.name ?? service.name,
-      description: request.description ?? service.description,
-      price: request.price ?? service.price,
-      duration: request.duration ?? service.duration,
-      isActive: request.isActive ?? service.isActive,
-    });
-
-    if (!updatedService) {
-      throw new ServiceNotFoundException(id);
+    if (updateServiceDto.name) {
+      service.name = updateServiceDto.name;
+    }
+    if (updateServiceDto.description) {
+      service.description = updateServiceDto.description;
+    }
+    if (updateServiceDto.price) {
+      service.price = updateServiceDto.price;
+    }
+    if (updateServiceDto.duration) {
+      service.duration = updateServiceDto.duration;
+    }
+    if (updateServiceDto.isActive !== undefined) {
+      service.isActive = updateServiceDto.isActive;
     }
 
-    return updatedService;
+    return this.serviceRepository.update(id, service);
   }
 } 
