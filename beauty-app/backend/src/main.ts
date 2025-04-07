@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './src/core/infrastructure/modules/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
@@ -15,9 +15,12 @@ async function bootstrap() {
   // Swaggerの設定
   const config = new DocumentBuilder()
     .setTitle('Beauty App API')
-    .setDescription('The Beauty App API description')
+    .setDescription('美容サービス管理システムのAPIドキュメント')
     .setVersion('1.0')
     .addBearerAuth()
+    .addTag('users', 'ユーザー管理関連のエンドポイント')
+    .addTag('services', 'サービス管理関連のエンドポイント')
+    .addTag('auth', '認証関連のエンドポイント')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
