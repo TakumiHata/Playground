@@ -42,12 +42,14 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import moment from 'moment';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { reservationApi, Reservation } from '../../api/reservationApi';
+import { reservationApi, Reservation, GetReservationsParams } from '../../api/reservationApi';
 import { customerApi, Customer } from '../../api/customerApi';
 import { serviceApi, Service } from '../../api/serviceApi';
 import { validateFilterForm, ValidationError } from '../../utils/validation';
 import { useDebounce } from '../../hooks/useDebounce';
 import { exportToCSV, exportToPDF } from '../../utils/export';
+import { usePagination } from '../../hooks/usePagination';
+import { useCache } from '../../hooks/useCache';
 
 const getStatusColor = (status: Reservation['status']) => {
   switch (status) {
@@ -75,13 +77,6 @@ const getStatusLabel = (status: Reservation['status']) => {
   }
 };
 
-interface FilterState {
-  startDate: moment.Moment | null;
-  endDate: moment.Moment | null;
-  status: string;
-  customerName: string;
-}
-
 export const ReservationList: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -89,18 +84,36 @@ export const ReservationList: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [customers, setCustomers] = useState<Record<string, Customer>>({});
   const [services, setServices] = useState<Record<string, Service>>({});
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const { get: getCache, set: setCache } = useCache<{
+    reservations: Reservation[];
+    customers: Record<string, Customer>;
+    services: Record<string, Service>;
+    totalItems: number;
+  }>();
+
+  const {
+    page,
+    limit,
+    totalPages,
+    setPage,
+    setLimit,
+    nextPage,
+    prevPage,
+    goToPage,
+    resetPagination,
+  } = usePagination({
+    initialPage: 1,
+    initialLimit: 10,
+    totalItems,
+  });
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-  const [filters, setFilters] = useState<FilterState>({
-    startDate: null,
-    endDate: null,
-    status: '',
-    customerName: '',
-  });
+  const [filters, setFilters] = useState<GetReservationsParams>({});
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   // デバウンスされたフィルター値
@@ -111,9 +124,9 @@ export const ReservationList: React.FC = () => {
   // リアルタイムバリデーション
   useEffect(() => {
     const errors = validateFilterForm(
-      debouncedStartDate,
-      debouncedEndDate,
-      debouncedCustomerName
+      debouncedStartDate ? moment(debouncedStartDate) : null,
+      debouncedEndDate ? moment(debouncedEndDate) : null,
+      debouncedCustomerName || ''
     );
     setValidationErrors(errors);
   }, [debouncedStartDate, debouncedEndDate, debouncedCustomerName]);
@@ -122,25 +135,64 @@ export const ReservationList: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [reservationsData, customersData, servicesData] = await Promise.all([
-          reservationApi.getReservations(),
-          customerApi.getCustomers(),
-          serviceApi.getServices(),
-        ]);
+        
+        // キャッシュキーの生成
+        const cacheKey = `reservations:${JSON.stringify({ ...filters, page, limit })}`;
+        
+        // キャッシュからデータを取得
+        const cachedData = getCache(cacheKey);
+        if (cachedData) {
+          setReservations(cachedData.reservations);
+          setCustomers(cachedData.customers);
+          setServices(cachedData.services);
+          setTotalItems(cachedData.totalItems);
+          setLoading(false);
+          return;
+        }
 
-        setReservations(reservationsData);
-        setCustomers(
-          customersData.reduce((acc, customer) => {
-            acc[customer.id] = customer;
-            return acc;
-          }, {} as Record<string, Customer>)
-        );
-        setServices(
-          servicesData.reduce((acc, service) => {
-            acc[service.id] = service;
-            return acc;
-          }, {} as Record<string, Service>)
-        );
+        const response = await reservationApi.getReservations({
+          ...filters,
+          page,
+          limit,
+        });
+
+        const newCustomers = response.data.reduce((acc, reservation) => {
+          acc[reservation.customerId] = reservation.customer;
+          return acc;
+        }, {} as Record<string, Customer>);
+
+        const newServices = response.data.reduce((acc, reservation) => {
+          const service = reservation.service as Partial<Service>;
+          if (!service.description || !service.category) {
+            console.warn(`Service ${service.id} is missing required fields:`, {
+              description: service.description,
+              category: service.category
+            });
+          }
+          
+          acc[reservation.serviceId] = {
+            id: service.id!,
+            name: service.name!,
+            description: service.description || '説明なし',
+            duration: service.duration!,
+            price: service.price!,
+            category: service.category || 'その他'
+          };
+          return acc;
+        }, {} as Record<string, Service>);
+
+        setReservations(response.data);
+        setCustomers(newCustomers);
+        setServices(newServices);
+        setTotalItems(response.total);
+
+        // データをキャッシュに保存（5分間有効）
+        setCache(cacheKey, {
+          reservations: response.data,
+          customers: newCustomers,
+          services: newServices,
+          totalItems: response.total,
+        }, 5 * 60 * 1000);
       } catch (err) {
         setError('データの取得に失敗しました');
         console.error(err);
@@ -150,15 +202,15 @@ export const ReservationList: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [page, limit, filters, getCache, setCache]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+    setPage(newPage + 1);
   };
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setLimit(parseInt(event.target.value, 10));
+    setPage(1);
   };
 
   const handleEdit = (reservation: Reservation) => {
@@ -189,63 +241,20 @@ export const ReservationList: React.FC = () => {
     }
   };
 
-  const handleFilterChange = (name: keyof FilterState, value: any) => {
-    setFilters(prev => ({ ...prev, [name]: value }));
+  const handleFilterChange = (key: keyof GetReservationsParams, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleFilterSubmit = async () => {
-    if (validationErrors.length > 0) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const params: any = {};
-      if (filters.startDate) {
-        params.startDate = filters.startDate.format('YYYY-MM-DD');
-      }
-      if (filters.endDate) {
-        params.endDate = filters.endDate.format('YYYY-MM-DD');
-      }
-      if (filters.status) {
-        params.status = filters.status;
-      }
-      if (filters.customerName) {
-        params.customerName = filters.customerName;
-      }
-
-      const data = await reservationApi.getReservations(params);
-      setReservations(data);
-      setPage(0);
-      setFilterDialogOpen(false);
-    } catch (err) {
-      setError('フィルタリングに失敗しました');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const handleFilterApply = () => {
+    if (validationErrors.length > 0) return;
+    resetPagination();
+    setFilterDialogOpen(false);
   };
 
-  const handleFilterReset = async () => {
-    setFilters({
-      startDate: null,
-      endDate: null,
-      status: '',
-      customerName: '',
-    });
-    setValidationErrors([]);
-    try {
-      setLoading(true);
-      const data = await reservationApi.getReservations();
-      setReservations(data);
-      setPage(0);
-    } catch (err) {
-      setError('データの取得に失敗しました');
-      console.error(err);
-    } finally {
-      setLoading(false);
-      setFilterDialogOpen(false);
-    }
+  const handleFilterReset = () => {
+    setFilters({});
+    resetPagination();
+    setFilterDialogOpen(false);
   };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -276,158 +285,65 @@ export const ReservationList: React.FC = () => {
   }
 
   return (
-    <Paper sx={{ p: 3 }}>
+    <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h6">予約一覧</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <IconButton onClick={() => setFilterDialogOpen(true)}>
-            <FilterListIcon />
-          </IconButton>
-          <IconButton onClick={handleMenuClick}>
-            <MoreVertIcon />
-          </IconButton>
+        <Typography variant="h5">予約一覧</Typography>
+        <Box>
+          <Button
+            startIcon={<FilterListIcon />}
+            onClick={() => setFilterDialogOpen(true)}
+            sx={{ mr: 1 }}
+          >
+            フィルター
+          </Button>
+          <Button
+            startIcon={<MoreVertIcon />}
+            onClick={handleMenuClick}
+          >
+            エクスポート
+          </Button>
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={handleMenuClose}
           >
-            <MuiMenuItem onClick={handleExportCSV}>CSVでエクスポート</MuiMenuItem>
-            <MuiMenuItem onClick={handleExportPDF}>PDFでエクスポート</MuiMenuItem>
+            <MuiMenuItem onClick={handleExportCSV}>CSVエクスポート</MuiMenuItem>
+            <MuiMenuItem onClick={handleExportPDF}>PDFエクスポート</MuiMenuItem>
           </Menu>
         </Box>
       </Box>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>顧客名</TableCell>
-              <TableCell>サービス</TableCell>
-              <TableCell>日時</TableCell>
-              <TableCell>料金</TableCell>
-              <TableCell>ステータス</TableCell>
-              <TableCell>操作</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {reservations
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((reservation) => (
-                <TableRow key={reservation.id}>
-                  <TableCell>
-                    <Link
-                      component={RouterLink}
-                      to={`/reservations/${reservation.id}`}
-                      color="inherit"
-                      underline="hover"
-                    >
-                      {customers[reservation.customerId]?.name || '不明'}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    {services[reservation.serviceId]?.name || '不明'}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(reservation.dateTime).toLocaleString('ja-JP')}
-                  </TableCell>
-                  <TableCell>
-                    ¥{services[reservation.serviceId]?.price.toLocaleString() || '0'}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={getStatusLabel(reservation.status)}
-                      color={getStatusColor(reservation.status)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="詳細">
-                        <IconButton
-                          size="small"
-                          component={RouterLink}
-                          to={`/reservations/${reservation.id}`}
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="編集">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEdit(reservation)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="削除">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDeleteClick(reservation)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={reservations.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage="表示件数"
-        labelDisplayedRows={({ from, to, count }) =>
-          `${from}-${to} / ${count}件`
-        }
-      />
 
-      <Dialog
-        open={filterDialogOpen}
-        onClose={() => setFilterDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>フィルター</DialogTitle>
+      <Dialog open={filterDialogOpen} onClose={() => setFilterDialogOpen(false)}>
+        <DialogTitle>予約のフィルター</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <LocalizationProvider dateAdapter={AdapterMoment}>
                 <DatePicker
                   label="開始日"
-                  value={filters.startDate}
-                  onChange={(date) => handleFilterChange('startDate', date)}
+                  value={filters.startDate ? moment(filters.startDate) : null}
+                  onChange={(date) => handleFilterChange('startDate', date?.format('YYYY-MM-DD') || '')}
                   slotProps={{
                     textField: {
                       fullWidth: true,
-                      error: validationErrors.some(error => error.field === 'dateRange'),
-                      helperText: validationErrors.find(error => error.field === 'dateRange')?.message,
+                      error: validationErrors.some(error => error.field === 'startDate'),
+                      helperText: validationErrors.find(error => error.field === 'startDate')?.message,
                     },
                   }}
                 />
               </LocalizationProvider>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <LocalizationProvider dateAdapter={AdapterMoment}>
                 <DatePicker
                   label="終了日"
-                  value={filters.endDate}
-                  onChange={(date) => handleFilterChange('endDate', date)}
+                  value={filters.endDate ? moment(filters.endDate) : null}
+                  onChange={(date) => handleFilterChange('endDate', date?.format('YYYY-MM-DD') || '')}
                   slotProps={{
                     textField: {
                       fullWidth: true,
-                      error: validationErrors.some(error => error.field === 'dateRange'),
+                      error: validationErrors.some(error => error.field === 'endDate'),
+                      helperText: validationErrors.find(error => error.field === 'endDate')?.message,
                     },
                   }}
                 />
@@ -437,23 +353,23 @@ export const ReservationList: React.FC = () => {
               <FormControl fullWidth>
                 <InputLabel>ステータス</InputLabel>
                 <Select
-                  value={filters.status}
+                  value={filters.status || ''}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
                   label="ステータス"
                 >
                   <MenuItem value="">すべて</MenuItem>
-                  <MenuItem value="pending">未確定</MenuItem>
+                  <MenuItem value="pending">予約待ち</MenuItem>
                   <MenuItem value="confirmed">確定</MenuItem>
-                  <MenuItem value="completed">完了</MenuItem>
                   <MenuItem value="cancelled">キャンセル</MenuItem>
+                  <MenuItem value="completed">完了</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12}>
               <TextField
-                fullWidth
                 label="顧客名"
-                value={filters.customerName}
+                fullWidth
+                value={filters.customerName || ''}
                 onChange={(e) => handleFilterChange('customerName', e.target.value)}
                 error={validationErrors.some(error => error.field === 'customerName')}
                 helperText={validationErrors.find(error => error.field === 'customerName')?.message}
@@ -465,7 +381,7 @@ export const ReservationList: React.FC = () => {
           <Button onClick={handleFilterReset}>リセット</Button>
           <Button onClick={() => setFilterDialogOpen(false)}>キャンセル</Button>
           <Button
-            onClick={handleFilterSubmit}
+            onClick={handleFilterApply}
             variant="contained"
             disabled={validationErrors.length > 0}
           >
@@ -486,11 +402,98 @@ export const ReservationList: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>キャンセル</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+          <Button onClick={handleDeleteConfirm} color="error">
             削除
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+
+      {loading && reservations.length > 0 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+          <CircularProgress size={24} />
+        </Box>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>予約ID</TableCell>
+              <TableCell>顧客名</TableCell>
+              <TableCell>サービス</TableCell>
+              <TableCell>日付</TableCell>
+              <TableCell>時間</TableCell>
+              <TableCell>ステータス</TableCell>
+              <TableCell>料金</TableCell>
+              <TableCell>操作</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {reservations.map((reservation) => (
+              <TableRow key={reservation.id}>
+                <TableCell>{reservation.id}</TableCell>
+                <TableCell>
+                  <Link component={RouterLink} to={`/reservations/${reservation.id}`}>
+                    {reservation.customer.name}
+                  </Link>
+                </TableCell>
+                <TableCell>{reservation.service.name}</TableCell>
+                <TableCell>{reservation.date}</TableCell>
+                <TableCell>
+                  {reservation.startTime} - {reservation.endTime}
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={getStatusLabel(reservation.status)}
+                    color={getStatusColor(reservation.status)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>¥{reservation.service.price.toLocaleString()}</TableCell>
+                <TableCell>
+                  <Tooltip title="編集">
+                    <IconButton onClick={() => handleEdit(reservation)}>
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="詳細">
+                    <IconButton
+                      component={RouterLink}
+                      to={`/reservations/${reservation.id}`}
+                    >
+                      <VisibilityIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="削除">
+                    <IconButton onClick={() => handleDeleteClick(reservation)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <TablePagination
+          component="div"
+          count={totalItems}
+          page={page - 1}
+          onPageChange={handleChangePage}
+          rowsPerPage={limit}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="表示件数"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} / ${count}件`
+          }
+        />
+      </TableContainer>
+    </Box>
   );
 }; 
