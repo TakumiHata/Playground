@@ -13,17 +13,25 @@ const localizer = momentLocalizer(moment);
 export const ReservationCalendar: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; code: string; retryable: boolean; retryCount: number } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchReservations = async () => {
       try {
         setLoading(true);
-        const data = await reservationApi.getReservations();
-        setReservations(data);
+        const response = await reservationApi.getReservations({
+          page: 1,
+          limit: 100
+        });
+        setReservations(response.reservations);
       } catch (err) {
-        setError('予約の取得に失敗しました');
+        setError({
+          message: '予約の取得に失敗しました',
+          code: err instanceof Error ? err.message : 'UNKNOWN_ERROR',
+          retryable: true,
+          retryCount: 0
+        });
         console.error(err);
       } finally {
         setLoading(false);
@@ -77,7 +85,7 @@ export const ReservationCalendar: React.FC = () => {
   }
 
   if (error) {
-    return <Typography color="error">{error}</Typography>;
+    return <Typography color="error">{error.message}</Typography>;
   }
 
   return (

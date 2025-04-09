@@ -33,16 +33,20 @@ import {
   Select,
   Grid,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  ContentCopy as ContentCopyIcon,
+  History as HistoryIcon,
+  FilterList as FilterListIcon,
+  Compare as CompareIcon,
+} from '@mui/icons-material';
 import PreviewIcon from '@mui/icons-material/Preview';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import HistoryIcon from '@mui/icons-material/History';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import CompareIcon from '@mui/icons-material/Compare';
 import { notificationTemplateApi, NotificationTemplate, TemplateHistory } from '../../api/notificationTemplateApi';
+import { useNavigate } from 'react-router-dom';
 
-export const NotificationTemplateList: React.FC = () => {
+export default function NotificationTemplateList() {
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +83,7 @@ export const NotificationTemplateList: React.FC = () => {
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
   const [selectedTemplateForCompare, setSelectedTemplateForCompare] = useState<NotificationTemplate | null>(null);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTemplates();
@@ -337,243 +342,57 @@ export const NotificationTemplateList: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h5">通知テンプレート</Typography>
-        <Box>
-          <Button
-            startIcon={<FilterListIcon />}
-            onClick={() => setFilterDialogOpen(true)}
-            sx={{ mr: 1 }}
-          >
-            フィルター
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => {
-              setSelectedTemplate(null);
-              setFormData({
-                type: 'email',
-                name: '',
-                subject: '',
-                content: '',
-                variables: [],
-              });
-              setEditDialogOpen(true);
-            }}
-          >
-            新規作成
-          </Button>
-        </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4">通知テンプレート一覧</Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/notifications/new')}
+        >
+          新規テンプレート
+        </Button>
       </Box>
-
-      <Dialog open={filterDialogOpen} onClose={() => setFilterDialogOpen(false)}>
-        <DialogTitle>テンプレートのフィルター</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>タイプ</InputLabel>
-            <Select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              label="タイプ"
-            >
-              <MenuItem value="">すべて</MenuItem>
-              <MenuItem value="email">メール</MenuItem>
-              <MenuItem value="sms">SMS</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            margin="dense"
-            label="名前"
-            fullWidth
-            value={filterName}
-            onChange={(e) => setFilterName(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setFilterDialogOpen(false)}>キャンセル</Button>
-          <Button onClick={handleFilter} variant="contained">
-            適用
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog 
-        open={previewDialogOpen} 
-        onClose={() => setPreviewDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>テンプレートのプレビュー</DialogTitle>
-        <DialogContent>
-          {selectedTemplate && (
-            <Box>
-              <Typography variant="subtitle1" gutterBottom>
-                変数の値を入力してください
-              </Typography>
-              {selectedTemplate.variables.map((variable) => (
-                <TextField
-                  key={variable}
-                  margin="dense"
-                  label={variable}
-                  fullWidth
-                  value={previewVariables[variable] || ''}
-                  onChange={(e) => setPreviewVariables({
-                    ...previewVariables,
-                    [variable]: e.target.value
-                  })}
-                />
-              ))}
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  variant="contained"
-                  onClick={handlePreviewGenerate}
-                  disabled={previewLoading}
-                >
-                  プレビュー生成
-                </Button>
-              </Box>
-
-              {previewLoading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                  <CircularProgress />
-                </Box>
-              )}
-
-              {previewError && (
-                <Alert severity="error" sx={{ mt: 2 }}>
-                  {previewError}
-                </Alert>
-              )}
-
-              {previewResult && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    件名:
-                  </Typography>
-                  <Paper sx={{ p: 2, mb: 2 }}>
-                    {previewResult.subject}
-                  </Paper>
-                  <Typography variant="subtitle1" gutterBottom>
-                    本文:
-                  </Typography>
-                  <Paper sx={{ p: 2, whiteSpace: 'pre-wrap' }}>
-                    {previewResult.content}
-                  </Paper>
-                </Box>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPreviewDialogOpen(false)}>閉じる</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog 
-        open={compareDialogOpen} 
-        onClose={() => setCompareDialogOpen(false)}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle>テンプレートの差分</DialogTitle>
-        <DialogContent>
-          {selectedTemplate && selectedTemplateForCompare && (
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Typography variant="h6" gutterBottom>
-                  {selectedTemplate.name}
-                </Typography>
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    件名:
-                  </Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>
-                    {selectedTemplate.subject}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    本文:
-                  </Typography>
-                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                    {selectedTemplate.content}
-                  </Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="h6" gutterBottom>
-                  {selectedTemplateForCompare.name}
-                </Typography>
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    件名:
-                  </Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>
-                    {renderDiff(selectedTemplate.subject, selectedTemplateForCompare.subject)}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    本文:
-                  </Typography>
-                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                    {renderDiff(selectedTemplate.content, selectedTemplateForCompare.content)}
-                  </Typography>
-                </Paper>
-              </Grid>
-            </Grid>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCompareDialogOpen(false)}>閉じる</Button>
-        </DialogActions>
-      </Dialog>
 
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>名前</TableCell>
-              <TableCell>タイプ</TableCell>
+              <TableCell>テンプレート名</TableCell>
+              <TableCell>種類</TableCell>
               <TableCell>件名</TableCell>
-              <TableCell>変数</TableCell>
+              <TableCell>最終更新日</TableCell>
+              <TableCell>更新者</TableCell>
               <TableCell>操作</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {(filteredTemplates.length > 0 ? filteredTemplates : templates).map((template) => (
+            {templates.map((template) => (
               <TableRow key={template.id}>
                 <TableCell>{template.name}</TableCell>
                 <TableCell>
-                  <Chip 
-                    label={template.type === 'email' ? 'メール' : 'SMS'} 
-                    color={template.type === 'email' ? 'primary' : 'secondary'} 
+                  <Chip
+                    label={template.type === 'email' ? 'メール' : 'SMS'}
+                    color={template.type === 'email' ? 'primary' : 'secondary'}
+                    size="small"
                   />
                 </TableCell>
                 <TableCell>{template.subject}</TableCell>
+                <TableCell>{template.lastModified}</TableCell>
+                <TableCell>{template.modifiedBy}</TableCell>
                 <TableCell>
-                  {template.variables.map((variable) => (
-                    <Chip 
-                      key={variable} 
-                      label={variable} 
-                      size="small" 
-                      sx={{ mr: 0.5, mb: 0.5 }} 
-                    />
-                  ))}
-                </TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleEdit(template)}>
+                  <IconButton
+                    color="primary"
+                    onClick={() => navigate(`/notifications/${template.id}`)}
+                  >
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handlePreview(template)}>
-                    <PreviewIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDuplicate(template)}>
+                  <IconButton color="info">
                     <ContentCopyIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleShowHistory(template)}>
+                  <IconButton color="info">
                     <HistoryIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleCompare(template)}>
-                    <CompareIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(template)}>
+                  <IconButton color="error">
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -582,266 +401,6 @@ export const NotificationTemplateList: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {selectedTemplate ? 'テンプレートの編集' : '新規テンプレートの作成'}
-        </DialogTitle>
-        <DialogContent>
-          <Tabs value={previewTab} onChange={(_, newValue) => setPreviewTab(newValue)}>
-            <Tab label="編集" />
-            <Tab label="プレビュー" />
-          </Tabs>
-
-          {previewTab === 0 ? (
-            <>
-              <TextField
-                margin="dense"
-                label="名前"
-                fullWidth
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-              <TextField
-                margin="dense"
-                label="タイプ"
-                select
-                fullWidth
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as 'email' | 'sms' })}
-              >
-                <MenuItem value="email">メール</MenuItem>
-                <MenuItem value="sms">SMS</MenuItem>
-              </TextField>
-              <TextField
-                margin="dense"
-                label="件名"
-                fullWidth
-                value={formData.subject}
-                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              />
-              <TextField
-                margin="dense"
-                label="本文"
-                fullWidth
-                multiline
-                rows={6}
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              />
-              <TextField
-                margin="dense"
-                label="変数"
-                fullWidth
-                value={formData.variables.join(', ')}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    variables: e.target.value.split(',').map((v) => v.trim()),
-                  })
-                }
-                helperText="カンマ区切りで変数を入力してください"
-              />
-            </>
-          ) : (
-            <Box sx={{ mt: 2 }}>
-              {formData.variables.map((variable) => (
-                <TextField
-                  key={variable}
-                  margin="dense"
-                  label={variable}
-                  fullWidth
-                  value={previewVariables[variable] || ''}
-                  onChange={(e) =>
-                    setPreviewVariables({ ...previewVariables, [variable]: e.target.value })
-                  }
-                />
-              ))}
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<PreviewIcon />}
-                  onClick={handlePreview}
-                  disabled={previewLoading}
-                >
-                  プレビュー
-                </Button>
-              </Box>
-
-              {previewLoading && <CircularProgress />}
-
-              {previewError && (
-                <Alert severity="error" sx={{ mt: 2 }}>
-                  {previewError}
-                </Alert>
-              )}
-
-              {previewResult && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    件名:
-                  </Typography>
-                  <Paper sx={{ p: 2, mb: 2 }}>{previewResult.subject}</Paper>
-
-                  <Typography variant="subtitle1" gutterBottom>
-                    本文:
-                  </Typography>
-                  <Paper sx={{ p: 2, whiteSpace: 'pre-wrap' }}>{previewResult.content}</Paper>
-                </Box>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>キャンセル</Button>
-          <Button onClick={handleSave} variant="contained">
-            保存
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>テンプレートの削除</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {selectedTemplate?.name}を削除してもよろしいですか？
-            この操作は取り消せません。
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>キャンセル</Button>
-          <Button onClick={handleDeleteConfirm} color="error">
-            削除
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={duplicateDialogOpen} onClose={() => setDuplicateDialogOpen(false)}>
-        <DialogTitle>テンプレートの複製</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            複製するテンプレートの名前を入力し、変数の初期値を設定してください。
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="テンプレート名"
-            fullWidth
-            value={duplicateName}
-            onChange={(e) => handleDuplicateNameChange(e.target.value)}
-            error={!!duplicateError}
-            helperText={duplicateError}
-          />
-          
-          {selectedTemplate && selectedTemplate.variables.length > 0 && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                変数の初期値
-              </Typography>
-              {selectedTemplate.variables.map((variable) => (
-                <TextField
-                  key={variable}
-                  margin="dense"
-                  label={variable}
-                  fullWidth
-                  value={initialVariables[variable] || ''}
-                  onChange={(e) => handleInitialVariableChange(variable, e.target.value)}
-                  helperText={`${variable}の初期値を設定します`}
-                />
-              ))}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDuplicateDialogOpen(false)}>キャンセル</Button>
-          <Button 
-            onClick={handleDuplicateConfirm} 
-            variant="contained"
-            disabled={!!duplicateError}
-          >
-            複製
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog 
-        open={historyDialogOpen} 
-        onClose={() => setHistoryDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          {selectedTemplate?.name} の複製履歴
-        </DialogTitle>
-        <DialogContent>
-          {historyLoading || originalTemplateLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : historyError || originalTemplateError ? (
-            <Alert severity="error">{historyError || originalTemplateError}</Alert>
-          ) : (
-            <Box>
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  複製元テンプレート
-                </Typography>
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    名前: {originalTemplate?.name}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    タイプ: {originalTemplate?.type}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    件名: {originalTemplate?.subject}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    変数: {originalTemplate?.variables.join(', ')}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    作成日時: {originalTemplate?.createdAt && new Date(originalTemplate.createdAt).toLocaleString()}
-                  </Typography>
-                  <Typography variant="subtitle1">
-                    更新日時: {originalTemplate?.updatedAt && new Date(originalTemplate.updatedAt).toLocaleString()}
-                  </Typography>
-                </Paper>
-              </Box>
-
-              <Typography variant="h6" gutterBottom>
-                複製履歴
-              </Typography>
-              {templateHistory.length === 0 ? (
-                <Typography>複製履歴はありません</Typography>
-              ) : (
-                <List>
-                  {templateHistory.map((history) => (
-                    <ListItem key={history.id} divider>
-                      <ListItemText
-                        primary={`${history.originalName} → ${history.newName}`}
-                        secondary={
-                          <>
-                            <Typography variant="body2" component="span">
-                              複製日時: {new Date(history.duplicatedAt).toLocaleString()}
-                            </Typography>
-                            <br />
-                            <Typography variant="body2" component="span">
-                              複製者: {history.duplicatedBy}
-                            </Typography>
-                          </>
-                        }
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setHistoryDialogOpen(false)}>閉じる</Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
-}; 
+} 

@@ -22,6 +22,10 @@ import {
   DialogActions,
   TextField,
   Snackbar,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -34,8 +38,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { reservationApi, Reservation } from '../../api/reservationApi';
 import { customerApi, Customer } from '../../api/customerApi';
 import { serviceApi, Service } from '../../api/serviceApi';
-import { ReservationHistory } from './ReservationHistory';
+import { ReservationHistoryView } from './ReservationHistory';
 import { notificationApi } from '../../api/notificationApi';
+import { Save as SaveIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
 const getStatusColor = (status: Reservation['status']) => {
   switch (status) {
@@ -204,192 +209,102 @@ export const ReservationDetail: React.FC = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h5">予約詳細</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="contained"
-            startIcon={<EditIcon />}
-            onClick={handleEdit}
-          >
-            編集
-          </Button>
-          {reservation?.status !== 'cancelled' && (
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={() => setCancelDialogOpen(true)}
-            >
-              キャンセル
-            </Button>
-          )}
-        </Box>
+        <Typography variant="h4">予約詳細</Typography>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/reservations')}
+        >
+          一覧に戻る
+        </Button>
       </Box>
 
-      <Paper>
-        <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab label="基本情報" />
-          <Tab label="変更履歴" />
-        </Tabs>
-
-        <TabPanel value={tabValue} index={0}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Chip
-                label={getStatusLabel(reservation.status)}
-                color={getStatusColor(reservation.status)}
-                sx={{ mb: 2 }}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <List>
-                <ListItem>
-                  <ListItemIcon>
-                    <PersonIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="顧客情報"
-                    secondary={
-                      <Box>
-                        <Typography variant="body1">
-                          {customer?.name || '不明'}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {customer?.email || 'メールアドレスなし'}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {customer?.phone || '電話番号なし'}
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </ListItem>
-                <Divider />
-                <ListItem>
-                  <ListItemIcon>
-                    <EventIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="日時"
-                    secondary={new Date(reservation.dateTime).toLocaleString('ja-JP')}
-                  />
-                </ListItem>
-                <Divider />
-                <ListItem>
-                  <ListItemIcon>
-                    <AttachMoneyIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="サービス情報"
-                    secondary={
-                      <Box>
-                        <Typography variant="body1">
-                          {service?.name || '不明'}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          ¥{service?.price.toLocaleString() || '0'}
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </ListItem>
-              </List>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <List>
-                <ListItem>
-                  <ListItemIcon>
-                    <DescriptionIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="メモ"
-                    secondary={reservation.notes || 'メモなし'}
-                  />
-                </ListItem>
-                {reservation.status === 'cancelled' && reservation.cancelReason && (
-                  <>
-                    <Divider />
-                    <ListItem>
-                      <ListItemIcon>
-                        <CancelIcon />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary="キャンセル理由"
-                        secondary={reservation.cancelReason}
-                      />
-                    </ListItem>
-                  </>
-                )}
-              </List>
-            </Grid>
+      <Paper sx={{ p: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="顧客名"
+              value={reservation.customer.name}
+              variant="outlined"
+            />
           </Grid>
-        </TabPanel>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="電話番号"
+              value={reservation.customer.phone}
+              variant="outlined"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="サービス"
+              value={reservation.service.name}
+              variant="outlined"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="担当者"
+              value={reservation.staff?.name || ''}
+              variant="outlined"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="予約日時"
+              type="datetime-local"
+              value={reservation.dateTime}
+              variant="outlined"
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel>ステータス</InputLabel>
+              <Select
+                value={reservation.status}
+                label="ステータス"
+              >
+                <MenuItem value="confirmed">確定</MenuItem>
+                <MenuItem value="pending">未確定</MenuItem>
+                <MenuItem value="cancelled">キャンセル</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
 
-        <TabPanel value={tabValue} index={1}>
-          <ReservationHistory />
-        </TabPanel>
-      </Paper>
+        <Divider sx={{ my: 3 }} />
 
-      <Dialog
-        open={cancelDialogOpen}
-        onClose={() => setCancelDialogOpen(false)}
-      >
-        <DialogTitle>予約のキャンセル</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            この予約をキャンセルしてもよろしいですか？
-            この操作は取り消せません。
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="キャンセル理由"
-            type="text"
-            fullWidth
-            multiline
-            rows={4}
-            value={cancelReason}
-            onChange={(e) => setCancelReason(e.target.value)}
-            disabled={cancelling}
-          />
-        </DialogContent>
-        <DialogActions>
+        <TextField
+          fullWidth
+          label="メモ"
+          value={reservation.notes}
+          multiline
+          rows={4}
+          variant="outlined"
+        />
+
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
           <Button
+            variant="contained"
+            startIcon={<SaveIcon />}
             onClick={() => {
-              setCancelDialogOpen(false);
-              setCancelReason('');
+              // 保存処理
+              navigate('/reservations');
             }}
-            disabled={cancelling}
           >
-            キャンセル
+            保存
           </Button>
-          <Button
-            onClick={handleCancel}
-            color="error"
-            disabled={cancelling || !cancelReason.trim()}
-          >
-            {cancelling ? 'キャンセル中...' : '予約をキャンセル'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar
-        open={notificationSent}
-        autoHideDuration={6000}
-        onClose={() => setNotificationSent(false)}
-        message="キャンセル通知を送信しました"
-      />
-
-      <Snackbar
-        open={!!notificationError}
-        autoHideDuration={6000}
-        onClose={() => setNotificationError(null)}
-      >
-        <Alert severity="error" onClose={() => setNotificationError(null)}>
-          {notificationError}
-        </Alert>
-      </Snackbar>
+        </Box>
+      </Paper>
     </Box>
   );
-}; 
+};
+
+export default ReservationDetail; 

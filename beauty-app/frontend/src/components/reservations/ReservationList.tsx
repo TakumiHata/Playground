@@ -519,25 +519,23 @@ export default function ReservationList() {
       const customer = customers[selectedReservation.customerId];
       const service = services[selectedReservation.serviceId];
 
-      // メールアドレスが存在しない場合は早期リターン
-      if (!customer?.email) {
-        console.warn(`顧客 ${customer?.name} (ID: ${customer?.id}) のメールアドレスが設定されていません。キャンセル通知は送信されませんでした。`);
-        return;
-      }
-
       // メールアドレスが存在する場合のみ通知を送信
-      try {
-        await notificationApi.sendReservationCancellation(
-          selectedReservation.id,
-          customer.email,
-          customer.name,
-          service?.name || '不明',
-          selectedReservation.dateTime,
-          '理由なし'
-        );
-      } catch (notificationError) {
-        console.error('キャンセル通知の送信に失敗しました:', notificationError);
-        // 通知の失敗は予約の削除を妨げない
+      if (customer?.email) {
+        try {
+          await notificationApi.sendReservationCancellation(
+            selectedReservation.id,
+            customer.email,
+            customer.name,
+            service?.name || '不明',
+            selectedReservation.dateTime,
+            '理由なし'
+          );
+        } catch (notificationError) {
+          console.error('キャンセル通知の送信に失敗しました:', notificationError);
+          // 通知の失敗は予約の削除を妨げない
+        }
+      } else {
+        console.warn(`顧客 ${customer?.name} (ID: ${customer?.id}) のメールアドレスが設定されていません。キャンセル通知は送信されませんでした。`);
       }
     } catch (err) {
       handleError(err, '予約の削除');

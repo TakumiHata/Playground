@@ -11,14 +11,30 @@ import {
   Chip,
   CircularProgress,
   Alert,
+  Grid,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Card,
+  CardContent,
 } from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
 import PersonIcon from '@mui/icons-material/Person';
 import EventIcon from '@mui/icons-material/Event';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import DescriptionIcon from '@mui/icons-material/Description';
+import CancelIcon from '@mui/icons-material/Cancel';
+import SearchIcon from '@mui/icons-material/Search';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import { useParams } from 'react-router-dom';
-import { reservationHistoryApi, ReservationHistory } from '../../api/reservationHistoryApi';
+import { reservationHistoryApi, type ReservationHistory, type GetReservationHistoryParams } from '../../api/reservationHistoryApi';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { ja } from 'date-fns/locale';
 
 const getFieldIcon = (field: string) => {
   switch (field) {
@@ -82,7 +98,7 @@ const getStatusLabel = (status: string): string => {
   }
 };
 
-export const ReservationHistory: React.FC = () => {
+export const ReservationHistoryView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +124,11 @@ export const ReservationHistory: React.FC = () => {
   }, [id]);
 
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error) {
@@ -138,17 +158,21 @@ export const ReservationHistory: React.FC = () => {
             <ListItem>
               <ListItemText
                 primary={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="subtitle1">
-                      {new Date(record.changedAt).toLocaleString('ja-JP')}
-                    </Typography>
-                    <Chip
-                      label={record.changedBy}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
-                  </Box>
+                  <Grid container alignItems="center" spacing={2}>
+                    <Grid item>
+                      <Typography variant="subtitle1">
+                        {new Date(record.changedAt).toLocaleString('ja-JP')}
+                      </Typography>
+                    </Grid>
+                    <Grid item>
+                      <Chip
+                        label={record.changedBy}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    </Grid>
+                  </Grid>
                 }
                 secondary={
                   <List disablePadding>

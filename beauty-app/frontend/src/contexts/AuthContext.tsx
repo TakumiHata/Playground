@@ -1,94 +1,96 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import axios from 'axios';
-import { 
-  AuthState, 
-  AuthContextType, 
-  LoginCredentials, 
-  User, 
-  AuthToken 
-} from '../types/auth';
-import { useAuth } from '../hooks/useAuth';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authApi } from '../api/authApi';
 
-// 初期状態
-const initialState: AuthState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  isLoading: false,
-  error: null,
-};
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'staff';
+}
 
-// アクションの型定義
-type AuthAction =
-  | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: User; token: AuthToken } }
-  | { type: 'AUTH_FAILURE'; payload: string }
-  | { type: 'AUTH_LOGOUT' }
-  | { type: 'TOKEN_REFRESHED'; payload: AuthToken };
+interface RegisterData {
+  email: string;
+  password: string;
+  name: string;
+  role: 'admin' | 'staff';
+}
 
-// Reducer
-const authReducer = (state: AuthState, action: AuthAction): AuthState => {
-  switch (action.type) {
-    case 'AUTH_START':
-      return {
-        ...state,
-        isLoading: true,
-        error: null,
-      };
-    case 'AUTH_SUCCESS':
-      return {
-        ...state,
-        user: action.payload.user,
-        token: action.payload.token,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      };
-    case 'AUTH_FAILURE':
-      return {
-        ...state,
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: action.payload,
-      };
-    case 'AUTH_LOGOUT':
-      return {
-        ...initialState,
-      };
-    case 'TOKEN_REFRESHED':
-      return {
-        ...state,
-        token: action.payload,
-      };
-    default:
-      return state;
-  }
-};
+interface AuthContextType {
+  isAuthenticated: boolean;
+  user: User | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  register: (userData: RegisterData) => Promise<void>;
+  updateUser: (userData: Partial<User>) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+}
 
-// コンテキストの作成
-const AuthContext = createContext<ReturnType<typeof useAuth> | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// APIのベースURL
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
-
-// プロバイダーコンポーネント
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const auth = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // トークンが有効かどうかを確認
+      authApi.verifyToken()
+        .then((userData) => {
+          setIsAuthenticated(true);
+          setUser(userData);
+          setIsLoading(false);
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          setUser(null);
+          setIsLoading(false);
+        });
+    } else {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    const { token, user } = await authApi.login(email, password);
+    localStorage.setItem('token', token);
+    setIsAuthenticated(true);
+    setUser(user);
+  };
+
+  const logout = async () => {
+    await authApi.logout();
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    setUser(null);
+  };
+
+  const register = async (userData: RegisterData) => {
+    // Implementation of register function
+  };
+
+  const updateUser = async (userData: Partial<User>) => {
+    // Implementation of updateUser function
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    // Implementation of changePassword function
+  };
 
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthContext.Provider value={{ isAuthenticated, user, isLoading, login, logout, register, updateUser, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// カスタムフック
-export const useAuthContext = () => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }; 

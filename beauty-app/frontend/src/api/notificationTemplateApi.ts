@@ -2,13 +2,15 @@ import axios from 'axios';
 
 export interface NotificationTemplate {
   id: string;
-  type: 'email' | 'sms';
   name: string;
+  type: 'email' | 'sms';
   subject: string;
   content: string;
   variables: string[];
   createdAt: string;
   updatedAt: string;
+  lastModified: string;
+  modifiedBy: string;
 }
 
 export interface CreateNotificationTemplateDto {

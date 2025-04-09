@@ -1,68 +1,61 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import { theme } from './theme';
 import { AuthProvider } from './contexts/AuthContext';
-import { Dashboard } from './components/dashboard/Dashboard';
-import { LoginForm } from './components/auth/LoginForm';
-import { RegisterForm } from './components/auth/RegisterForm';
-import { ReservationCalendar } from './components/reservations/ReservationCalendar';
-import { ReservationForm } from './components/reservations/ReservationForm';
-import { ReservationList } from './components/reservations/ReservationList';
-import { ReservationEditForm } from './components/reservations/ReservationEditForm';
-import { ReservationDetail } from './components/reservations/ReservationDetail';
-import Layout from './components/Layout';
-import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
-import Products from './pages/Products';
-import Bookings from './pages/Bookings';
-import Profile from './pages/Profile';
-import AdminDashboard from './pages/admin/Dashboard';
-import ReservationManagement from './pages/admin/Reservations';
-import { AuthGuard } from './components/AuthGuard';
+import { theme } from './theme';
+import Layout from './components/layout/Layout';
+import Login from './components/auth/Login';
+import Dashboard from './components/dashboard/Dashboard';
+import ReservationList from './components/reservations/ReservationList';
+import ReservationDetail from './components/reservations/ReservationDetail';
+import CustomerList from './components/customers/CustomerList';
+import CustomerDetail from './components/customers/CustomerDetail';
+import ServiceList from './components/services/ServiceList';
+import ServiceDetail from './components/services/ServiceDetail';
+import NotificationTemplateList from './components/notifications/NotificationTemplateList';
+import NotificationTemplateDetail from './components/notifications/NotificationTemplateDetail';
+import PrivateRoute from './components/auth/PrivateRoute';
 
-export const App: React.FC = () => {
+const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/reservations" element={<ReservationList />} />
-            <Route path="/reservations/calendar" element={<ReservationCalendar />} />
-            <Route path="/reservations/new" element={<ReservationForm />} />
-            <Route path="/reservations/:id/edit" element={<ReservationEditForm />} />
-            <Route path="/reservations/:id" element={<ReservationDetail />} />
-            <Route path="/admin" element={
-              <AuthGuard requiredRole={['admin']}>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<AdminDashboard />} />
-                    <Route path="/reservations" element={<ReservationManagement />} />
-                  </Routes>
-                </Layout>
-              </AuthGuard>
-            } />
-            <Route path="/" element={
-              <AuthGuard>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/bookings" element={<Bookings />} />
-                    <Route path="/profile" element={<Profile />} />
-                  </Routes>
-                </Layout>
-              </AuthGuard>
-            } />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Layout />
+                </PrivateRoute>
+              }
+            >
+              <Route index element={<Dashboard />} />
+              <Route path="reservations">
+                <Route index element={<ReservationList />} />
+                <Route path=":id" element={<ReservationDetail />} />
+              </Route>
+              <Route path="customers">
+                <Route index element={<CustomerList />} />
+                <Route path=":id" element={<CustomerDetail />} />
+              </Route>
+              <Route path="services">
+                <Route index element={<ServiceList />} />
+                <Route path=":id" element={<ServiceDetail />} />
+              </Route>
+              <Route path="notifications">
+                <Route index element={<NotificationTemplateList />} />
+                <Route path=":id" element={<NotificationTemplateDetail />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
           </Routes>
         </Router>
       </AuthProvider>
     </ThemeProvider>
   );
-}; 
+};
+
+export default App; 

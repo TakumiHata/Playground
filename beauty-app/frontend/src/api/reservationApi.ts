@@ -1,13 +1,51 @@
 import axios from 'axios';
 
+export type ReservationStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+
 export interface Reservation {
   id: string;
   customerId: string;
   serviceId: string;
   dateTime: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: ReservationStatus;
   notes?: string;
+  customer: {
+    id: string;
+    name: string;
+    phone: string;
+  };
+  service: {
+    id: string;
+    name: string;
+    duration: number;
+    price: number;
+    description?: string;
+    category?: string;
+  };
+  staff?: {
+    id: string;
+    name: string;
+  };
   cancelReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetReservationsParams {
+  page?: number;
+  limit?: number;
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  customerName?: string;
+}
+
+export interface GetReservationsResponse {
+  reservations: Reservation[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface CreateReservationDto {
@@ -30,13 +68,8 @@ const API_BASE_URL = '/api';
 
 export const reservationApi = {
   // 予約一覧を取得
-  getReservations: async (params?: {
-    startDate?: string;
-    endDate?: string;
-    status?: string;
-    customerId?: string;
-  }) => {
-    const response = await axios.get(`${API_BASE_URL}/reservations`, { params });
+  getReservations: async (params: GetReservationsParams): Promise<GetReservationsResponse> => {
+    const response = await axios.get('/reservations', { params });
     return response.data;
   },
 

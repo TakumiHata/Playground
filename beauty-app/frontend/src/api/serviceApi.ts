@@ -3,10 +3,12 @@ import axios from 'axios';
 export interface Service {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   duration: number;
   price: number;
-  category: string;
+  category?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateServiceDto {

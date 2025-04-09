@@ -3,9 +3,12 @@ import axios from 'axios';
 export interface Customer {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   phone: string;
   address?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateCustomerDto {
