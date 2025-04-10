@@ -63,7 +63,7 @@ export const createDefaultRecoveryStrategies = () => {
 
   // サーバーエラーのリカバリー
   recovery.addStrategy({
-    condition: (error) => axios.isAxiosError(error) && error.response?.status >= 500,
+    condition: (error) => axios.isAxiosError(error) && (error.response?.status ?? 0) >= 500,
     action: async () => {
       // サーバーの状態を確認
       await axios.get('/api/health');
