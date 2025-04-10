@@ -8,79 +8,29 @@ export class StaffService {
   constructor(private prisma: PrismaService) {}
 
   async create(createStaffDto: CreateStaffDto) {
-    const { serviceIds, ...staffData } = createStaffDto;
-
-    return this.prisma.staff.create({
+    const { userId, specialties, schedule } = createStaffDto;
+    return this.prisma['staff'].create({
       data: {
-        ...staffData,
-        services: {
-          connect: serviceIds?.map(id => ({ id })),
-        },
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-        services: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            duration: true,
-          },
-        },
+        userId,
+        specialties,
+        schedule,
       },
     });
   }
 
   async findAll() {
-    return this.prisma.staff.findMany({
+    return this.prisma['staff'].findMany({
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-        services: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            duration: true,
-          },
-        },
+        user: true,
       },
     });
   }
 
   async findOne(id: string) {
-    const staff = await this.prisma.staff.findUnique({
+    const staff = await this.prisma['staff'].findUnique({
       where: { id },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-        services: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            duration: true,
-          },
-        },
+        user: true,
       },
     });
 
@@ -92,7 +42,7 @@ export class StaffService {
   }
 
   async update(id: string, updateStaffDto: UpdateStaffDto) {
-    const staff = await this.prisma.staff.findUnique({
+    const staff = await this.prisma['staff'].findUnique({
       where: { id },
     });
 
@@ -100,39 +50,22 @@ export class StaffService {
       throw new NotFoundException(`Staff with ID ${id} not found`);
     }
 
-    const { serviceIds, ...staffData } = updateStaffDto;
+    const { specialties, schedule } = updateStaffDto;
 
-    return this.prisma.staff.update({
+    return this.prisma['staff'].update({
       where: { id },
       data: {
-        ...staffData,
-        services: serviceIds ? {
-          set: serviceIds.map(id => ({ id })),
-        } : undefined,
+        specialties,
+        schedule,
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-        services: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            duration: true,
-          },
-        },
+        user: true,
       },
     });
   }
 
   async remove(id: string) {
-    const staff = await this.prisma.staff.findUnique({
+    const staff = await this.prisma['staff'].findUnique({
       where: { id },
     });
 
@@ -140,7 +73,7 @@ export class StaffService {
       throw new NotFoundException(`Staff with ID ${id} not found`);
     }
 
-    return this.prisma.staff.delete({
+    return this.prisma['staff'].delete({
       where: { id },
     });
   }

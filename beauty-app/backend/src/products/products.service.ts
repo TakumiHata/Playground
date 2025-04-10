@@ -1,36 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: Prisma.ProductCreateInput) {
-    return this.prisma.product.create({
-      data,
+  async create(createProductDto: CreateProductDto) {
+    return this.prisma['product'].create({
+      data: createProductDto,
     });
   }
 
   async findAll() {
-    return this.prisma.product.findMany();
+    return this.prisma['product'].findMany();
   }
 
   async findOne(id: string) {
-    return this.prisma.product.findUnique({
+    const product = await this.prisma['product'].findUnique({
       where: { id },
     });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return product;
   }
 
-  async update(id: string, data: Prisma.ProductUpdateInput) {
-    return this.prisma.product.update({
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    const product = await this.prisma['product'].findUnique({
       where: { id },
-      data,
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return this.prisma['product'].update({
+      where: { id },
+      data: updateProductDto,
     });
   }
 
   async remove(id: string) {
-    return this.prisma.product.delete({
+    const product = await this.prisma['product'].findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return this.prisma['product'].delete({
       where: { id },
     });
   }

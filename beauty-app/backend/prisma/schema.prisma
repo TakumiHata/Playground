@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   email     String   @unique
   password  String
   name      String
@@ -21,6 +21,7 @@ model User {
   // Relations
   reservations Reservation[]
   staffProfile Staff?
+  bookings    Booking[]
 }
 
 model Staff {
@@ -32,6 +33,7 @@ model Staff {
 
   // Relations
   reservations Reservation[]
+  bookings     Booking[]
 }
 
 model Reservation {
@@ -56,11 +58,39 @@ model Service {
   description String?
   price       Float
   duration    Int      // in minutes
+  category    String
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
   reservations Reservation[]
+}
+
+model Booking {
+  id        String   @id @default(uuid())
+  userId    String
+  staffId   String
+  date      DateTime
+  status    BookingStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+  staff     Staff    @relation(fields: [staffId], references: [id])
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum Role {
@@ -71,6 +101,13 @@ enum Role {
 }
 
 enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum BookingStatus {
   PENDING
   CONFIRMED
   CANCELLED

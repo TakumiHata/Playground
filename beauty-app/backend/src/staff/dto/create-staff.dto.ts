@@ -4,16 +4,10 @@ export class CreateStaffDto {
   @IsString()
   userId: string;
 
-  @IsString()
-  @IsOptional()
-  position?: string;
-
-  @IsString()
-  @IsOptional()
-  specialization?: string;
-
   @IsArray()
   @IsString({ each: true })
+  specialties: string[];
+
   @IsOptional()
-  serviceIds?: string[];
+  schedule?: any;
 } 

@@ -1,47 +1,68 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { CreateBookingDto } from './dto/create-booking.dto';
+import { UpdateBookingDto } from './dto/update-booking.dto';
 
 @Injectable()
 export class BookingsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, data: Prisma.BookingCreateInput) {
-    return this.prisma.booking.create({
+  async create(userId: string, createBookingDto: CreateBookingDto) {
+    return this.prisma['booking'].create({
       data: {
-        ...data,
-        user: {
-          connect: { id: userId },
-        },
+        ...createBookingDto,
+        userId,
       },
     });
   }
 
   async findAll() {
-    return this.prisma.booking.findMany();
+    return this.prisma['booking'].findMany();
   }
 
   async findOne(id: string) {
-    return this.prisma.booking.findUnique({
+    const booking = await this.prisma['booking'].findUnique({
       where: { id },
     });
+
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${id} not found`);
+    }
+
+    return booking;
   }
 
-  async findByUserId(userId: string) {
-    return this.prisma.booking.findMany({
+  async findByUser(userId: string) {
+    return this.prisma['booking'].findMany({
       where: { userId },
     });
   }
 
-  async update(id: string, data: Prisma.BookingUpdateInput) {
-    return this.prisma.booking.update({
+  async update(id: string, updateBookingDto: UpdateBookingDto) {
+    const booking = await this.prisma['booking'].findUnique({
       where: { id },
-      data,
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${id} not found`);
+    }
+
+    return this.prisma['booking'].update({
+      where: { id },
+      data: updateBookingDto,
     });
   }
 
   async remove(id: string) {
-    return this.prisma.booking.delete({
+    const booking = await this.prisma['booking'].findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${id} not found`);
+    }
+
+    return this.prisma['booking'].delete({
       where: { id },
     });
   }
