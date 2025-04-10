@@ -1,22 +1,25 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { ReservationStatus } from '../../../../domain/entities/reservation.entity';
+import { ReservationStatus } from '../../../../domain/enums/reservation-status.enum';
 
 @Entity('reservations')
 export class ReservationSchema {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'user_id' })
+  @Column()
   userId: string;
 
-  @Column({ name: 'staff_id' })
-  staffId: string;
+  @Column()
+  serviceId: string;
 
-  @Column('simple-array', { name: 'service_ids' })
-  serviceIds: string[];
-
-  @Column({ type: 'timestamp' })
+  @Column()
   date: Date;
+
+  @Column()
+  startTime: string;
+
+  @Column()
+  endTime: string;
 
   @Column({
     type: 'enum',
@@ -28,9 +31,12 @@ export class ReservationSchema {
   @Column({ nullable: true })
   notes?: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @Column({ nullable: true })
+  staffId?: string;
+
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn()
   updatedAt: Date;
 } 
