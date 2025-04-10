@@ -1,34 +1,50 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity } from './entity';
 
-@Entity('services')
-export class Service {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
+export interface ServiceProps {
   name: string;
-
-  @Column()
-  description: string;
-
-  @Column('decimal', { precision: 10, scale: 2 })
+  description?: string;
   price: number;
-
-  @Column()
   duration: number;
-
-  @Column({ default: true })
   isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
-  @CreateDateColumn()
-  createdAt: Date;
+export class Service extends Entity<ServiceProps> {
+  private constructor(props: ServiceProps, id?: string) {
+    super(props, id);
+  }
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  public static create(props: ServiceProps, id?: string): Service {
+    const service = new Service(props, id);
+    return service;
+  }
 
-  constructor() {
-    this.isActive = true;
-    this.createdAt = new Date();
-    this.updatedAt = new Date();
+  get name(): string {
+    return this.props.name;
+  }
+
+  get description(): string | undefined {
+    return this.props.description;
+  }
+
+  get price(): number {
+    return this.props.price;
+  }
+
+  get duration(): number {
+    return this.props.duration;
+  }
+
+  get isActive(): boolean {
+    return this.props.isActive;
+  }
+
+  get createdAt(): Date {
+    return this.props.createdAt || new Date();
+  }
+
+  get updatedAt(): Date {
+    return this.props.updatedAt || new Date();
   }
 } 

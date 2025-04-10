@@ -1,26 +1,44 @@
-import { EntityRepository, Repository } from 'typeorm';
 import { Service } from '../entities/service.entity';
+import { IServiceRepository } from './service.repository.interface';
 
-@EntityRepository(Service)
-export class ServiceRepository extends Repository<Service> {
-  async findById(id: string): Promise<Service | undefined> {
-    return this.findOne({ where: { id } });
+export class ServiceRepository implements IServiceRepository {
+  private services: Service[] = [];
+
+  async findOne(where: { id: string }): Promise<Service | undefined> {
+    return this.services.find(service => service.id === where.id);
+  }
+
+  async findById(id: string): Promise<Service> {
+    const service = await this.findOne({ id });
+    if (!service) {
+      throw new Error(`Service with id ${id} not found`);
+    }
+    return service;
   }
 
   async findAll(): Promise<Service[]> {
-    return this.find();
+    return this.services;
   }
 
-  async createService(service: Service): Promise<Service> {
-    return this.save(service);
+  async create(service: Service): Promise<Service> {
+    this.services.push(service);
+    return service;
   }
 
-  async updateService(id: string, service: Partial<Service>): Promise<Service> {
-    await this.update(id, service);
-    return this.findById(id);
+  async update(id: string, service: Service): Promise<Service> {
+    const index = this.services.findIndex(s => s.id === id);
+    if (index === -1) {
+      throw new Error(`Service with id ${id} not found`);
+    }
+    this.services[index] = service;
+    return service;
   }
 
-  async deleteService(id: string): Promise<void> {
-    await this.delete(id);
+  async delete(id: string): Promise<void> {
+    const index = this.services.findIndex(s => s.id === id);
+    if (index === -1) {
+      throw new Error(`Service with id ${id} not found`);
+    }
+    this.services.splice(index, 1);
   }
 } 

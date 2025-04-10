@@ -1,22 +1,20 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { IServiceRepository } from '../../../domain/repositories/service.repository.interface';
 import { Service } from '../../../domain/entities/service.entity';
-import { CreateServiceRequestDto } from '../../../infrastructure/dto/services/create-service-request.dto';
+import { CreateServiceRequestDto } from '../../dto/services/create-service.dto';
 
 @Injectable()
 export class CreateServiceUseCase {
-  constructor(
-    @Inject('SERVICE_REPOSITORY')
-    private readonly serviceRepository: IServiceRepository,
-  ) {}
+  constructor(private readonly serviceRepository: IServiceRepository) {}
 
-  async execute(createServiceDto: CreateServiceRequestDto): Promise<Service> {
-    const service = new Service();
-    service.name = createServiceDto.name;
-    service.description = createServiceDto.description;
-    service.price = createServiceDto.price;
-    service.duration = createServiceDto.duration;
-    service.isActive = createServiceDto.isActive;
+  async execute(request: CreateServiceRequestDto): Promise<Service> {
+    const service = Service.create({
+      name: request.name,
+      description: request.description ?? '',
+      price: request.price,
+      duration: request.duration,
+      isActive: request.isActive ?? true,
+    });
 
     return this.serviceRepository.create(service);
   }
