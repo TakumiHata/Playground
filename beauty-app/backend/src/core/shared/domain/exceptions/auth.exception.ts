@@ -22,4 +22,11 @@ export class ForbiddenException extends DomainException {
   constructor() {
     super('アクセス権限がありません', 'FORBIDDEN', 403);
   }
+}
+
+export class UserAlreadyExistsException extends Error {
+  constructor() {
+    super('User already exists');
+    this.name = 'UserAlreadyExistsException';
+  }
 } 
