@@ -172,7 +172,7 @@ export const ReservationDetail: React.FC = () => {
       try {
         await notificationApi.sendReservationCancellation(
           reservation.id,
-          customer.email,
+          customer.email || '',
           customer.name,
           service?.name || '不明',
           reservation.dateTime,
