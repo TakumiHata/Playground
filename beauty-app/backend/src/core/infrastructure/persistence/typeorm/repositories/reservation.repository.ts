@@ -1,127 +1,93 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
-import { IReservationRepository } from '../../../../domain/repositories/reservation.repository.interface';
+import { Repository, Between } from 'typeorm';
 import { Reservation } from '../../../../domain/entities/reservation.entity';
-import { ReservationSchema } from '../entities/reservation.schema';
+import { IReservationRepository } from '../../../../domain/repositories/reservation.repository.interface';
+import { ReservationSchema } from '../schemas/reservation.schema';
 
 @Injectable()
 export class TypeOrmReservationRepository implements IReservationRepository {
   constructor(
     @InjectRepository(ReservationSchema)
-    private readonly repository: Repository<ReservationSchema>,
+    private readonly reservationRepository: Repository<ReservationSchema>,
   ) {}
 
+  async create(reservation: Reservation): Promise<Reservation> {
+    const schema = this.toSchema(reservation);
+    const savedSchema = await this.reservationRepository.save(schema);
+    return this.toDomain(savedSchema);
+  }
+
   async findById(id: string): Promise<Reservation | null> {
-    const schema = await this.repository.findOne({ where: { id } });
+    const schema = await this.reservationRepository.findOne({ where: { id } });
     return schema ? this.toDomain(schema) : null;
   }
 
+  async findAll(): Promise<Reservation[]> {
+    const schemas = await this.reservationRepository.find();
+    return schemas.map(schema => this.toDomain(schema));
+  }
+
   async findByDateRange(startDate: Date, endDate: Date): Promise<Reservation[]> {
-    const schemas = await this.repository.find({
+    const schemas = await this.reservationRepository.find({
       where: {
         date: Between(startDate, endDate),
       },
     });
-    return schemas.map(this.toDomain);
+    return schemas.map(schema => this.toDomain(schema));
   }
 
   async findByStaffId(staffId: string): Promise<Reservation[]> {
-    const schemas = await this.repository.find({
+    const schemas = await this.reservationRepository.find({
       where: { staffId },
     });
-    return schemas.map(this.toDomain);
+    return schemas.map(schema => this.toDomain(schema));
   }
 
   async findByUserId(userId: string): Promise<Reservation[]> {
-    const schemas = await this.repository.find({
+    const schemas = await this.reservationRepository.find({
       where: { userId },
     });
-    return schemas.map(this.toDomain);
+    return schemas.map(schema => this.toDomain(schema));
   }
 
-  async findByStaffIdAndDateRange(
-    staffId: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<Reservation[]> {
-    const schemas = await this.repository.find({
-      where: {
-        staffId,
-        date: Between(startDate, endDate),
-      },
-    });
-    return schemas.map(this.toDomain);
-  }
-
-  async findByUserIdAndDateRange(
-    userId: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<Reservation[]> {
-    const schemas = await this.repository.find({
-      where: {
-        userId,
-        date: Between(startDate, endDate),
-      },
-    });
-    return schemas.map(this.toDomain);
-  }
-
-  async findConflictingReservations(
-    staffId: string,
-    date: Date,
-    durationInMinutes: number,
-  ): Promise<Reservation[]> {
-    const endDate = new Date(date.getTime() + durationInMinutes * 60000);
-    const schemas = await this.repository.find({
-      where: {
-        staffId,
-        date: Between(date, endDate),
-      },
-    });
-    return schemas.map(this.toDomain);
-  }
-
-  async save(reservation: Reservation): Promise<void> {
+  async update(id: string, reservation: Reservation): Promise<Reservation> {
     const schema = this.toSchema(reservation);
-    await this.repository.save(schema);
-  }
-
-  async update(reservation: Reservation): Promise<void> {
-    const schema = this.toSchema(reservation);
-    await this.repository.update(schema.id, schema);
+    await this.reservationRepository.update(id, schema);
+    const updatedSchema = await this.reservationRepository.findOne({ where: { id } });
+    if (!updatedSchema) {
+      throw new Error('Reservation not found after update');
+    }
+    return this.toDomain(updatedSchema);
   }
 
   async delete(id: string): Promise<void> {
-    await this.repository.delete(id);
+    await this.reservationRepository.delete(id);
+  }
+
+  private toSchema(reservation: Reservation): ReservationSchema {
+    const schema = new ReservationSchema();
+    schema.userId = reservation.userId;
+    schema.serviceId = reservation.serviceId;
+    schema.staffId = reservation.staffId;
+    schema.date = reservation.date;
+    schema.startTime = reservation.startTime;
+    schema.endTime = reservation.endTime;
+    schema.status = reservation.status;
+    schema.notes = reservation.notes;
+    return schema;
   }
 
   private toDomain(schema: ReservationSchema): Reservation {
     return Reservation.create({
-      id: schema.id,
       userId: schema.userId,
+      serviceId: schema.serviceId,
       staffId: schema.staffId,
-      serviceIds: schema.serviceIds,
       date: schema.date,
+      startTime: schema.startTime,
+      endTime: schema.endTime,
       status: schema.status,
       notes: schema.notes,
-      createdAt: schema.createdAt,
-      updatedAt: schema.updatedAt,
     });
-  }
-
-  private toSchema(domain: Reservation): ReservationSchema {
-    const schema = new ReservationSchema();
-    schema.id = domain.id;
-    schema.userId = domain.userId;
-    schema.staffId = domain.staffId;
-    schema.serviceIds = domain.serviceIds;
-    schema.date = domain.date;
-    schema.status = domain.status;
-    schema.notes = domain.notes;
-    schema.createdAt = domain.createdAt;
-    schema.updatedAt = domain.updatedAt;
-    return schema;
   }
 } 

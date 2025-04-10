@@ -3,10 +3,10 @@ import { IReservationRepository } from '../../../domain/repositories/reservation
 import { Reservation } from '../../../domain/entities/reservation.entity';
 
 export interface GetReservationsRequest {
+  userId?: string;
+  staffId?: string;
   startDate?: Date;
   endDate?: Date;
-  staffId?: string;
-  userId?: string;
 }
 
 @Injectable()
@@ -14,21 +14,18 @@ export class GetReservationsUseCase {
   constructor(private readonly reservationRepository: IReservationRepository) {}
 
   async execute(request: GetReservationsRequest): Promise<Reservation[]> {
-    if (request.startDate && request.endDate) {
-      return this.reservationRepository.findByDateRange(
-        request.startDate,
-        request.endDate,
-      );
+    if (request.userId) {
+      return this.reservationRepository.findByUserId(request.userId);
     }
 
     if (request.staffId) {
       return this.reservationRepository.findByStaffId(request.staffId);
     }
 
-    if (request.userId) {
-      return this.reservationRepository.findByUserId(request.userId);
+    if (request.startDate && request.endDate) {
+      return this.reservationRepository.findByDateRange(request.startDate, request.endDate);
     }
 
-    return [];
+    return this.reservationRepository.findAll();
   }
 } 

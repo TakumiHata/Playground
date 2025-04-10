@@ -1,58 +1,40 @@
-import { Entity } from '../../../shared/domain/entity.base';
+import { Entity } from './entity';
+import { ReservationStatus } from '../enums/reservation-status.enum';
 
-export enum ReservationStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  CANCELLED = 'CANCELLED',
-  COMPLETED = 'COMPLETED',
-}
-
-export interface ReservationProps {
-  id?: string;
+interface ReservationProps {
   userId: string;
-  staffId: string;
-  serviceIds: string[];
+  serviceId: string;
+  staffId?: string;
   date: Date;
+  startTime: Date;
+  endTime: Date;
   status: ReservationStatus;
   notes?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 export class Reservation extends Entity<ReservationProps> {
-  private constructor(props: ReservationProps) {
-    super(props);
-  }
-
-  public static create(props: ReservationProps): Reservation {
-    const reservation = new Reservation({
-      ...props,
-      status: props.status ?? ReservationStatus.PENDING,
-      createdAt: props.createdAt ?? new Date(),
-      updatedAt: props.updatedAt ?? new Date(),
-    });
-
-    return reservation;
-  }
-
-  get id(): string {
-    return this._id;
-  }
-
   get userId(): string {
     return this.props.userId;
   }
 
-  get staffId(): string {
-    return this.props.staffId;
+  get serviceId(): string {
+    return this.props.serviceId;
   }
 
-  get serviceIds(): string[] {
-    return this.props.serviceIds;
+  get staffId(): string | undefined {
+    return this.props.staffId;
   }
 
   get date(): Date {
     return this.props.date;
+  }
+
+  get startTime(): Date {
+    return this.props.startTime;
+  }
+
+  get endTime(): Date {
+    return this.props.endTime;
   }
 
   get status(): ReservationStatus {
@@ -63,21 +45,12 @@ export class Reservation extends Entity<ReservationProps> {
     return this.props.notes;
   }
 
-  get createdAt(): Date {
-    return this.props.createdAt;
+  static create(props: ReservationProps): Reservation {
+    return new Reservation(props);
   }
 
-  get updatedAt(): Date {
-    return this.props.updatedAt;
+  private constructor(props: ReservationProps) {
+    super(props);
   }
-
-  public updateStatus(status: ReservationStatus): void {
-    this.props.status = status;
-    this.props.updatedAt = new Date();
-  }
-
-  public updateNotes(notes: string): void {
-    this.props.notes = notes;
-    this.props.updatedAt = new Date();
-  }
+} 
 } 
