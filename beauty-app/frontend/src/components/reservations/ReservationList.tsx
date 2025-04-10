@@ -202,12 +202,12 @@ const VirtualizedTable: React.FC<VirtualizedTableProps> = ({
         </TableHead>
         <TableBody>
           <AutoSizer>
-            {({ height, width }) => (
+            {({ height, width }: { height: number; width: number }) => (
               <FixedSizeList
                 height={height}
+                width={width}
                 itemCount={reservations.length}
                 itemSize={ROW_HEIGHT}
-                width={width}
                 onScroll={onScroll}
               >
                 {renderReservationRow}

@@ -152,7 +152,7 @@ export const ReservationForm: React.FC = () => {
               label="備考"
               name="notes"
               value={formData.notes}
-              onChange={handleChange}
+              onChange={() => handleChange}
               multiline
               rows={4}
             />
