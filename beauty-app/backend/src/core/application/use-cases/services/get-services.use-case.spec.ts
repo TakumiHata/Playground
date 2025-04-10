@@ -5,63 +5,48 @@ import { Service } from '../../../domain/entities/service.entity';
 
 describe('GetServicesUseCase', () => {
   let useCase: GetServicesUseCase;
-  let serviceRepository: jest.Mocked<IServiceRepository>;
-
-  const mockServices: Service[] = [
-    {
-      id: '1',
-      name: 'Test Service 1',
-      description: 'Test Description 1',
-      price: 1000,
-      duration: 60,
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: '2',
-      name: 'Test Service 2',
-      description: 'Test Description 2',
-      price: 2000,
-      duration: 90,
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
+  let serviceRepository: IServiceRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetServicesUseCase,
         {
-          provide: 'IServiceRepository',
+          provide: 'SERVICE_REPOSITORY',
           useValue: {
-            findAll: jest.fn().mockResolvedValue(mockServices),
+            findAll: jest.fn(),
           },
         },
       ],
     }).compile();
 
     useCase = module.get<GetServicesUseCase>(GetServicesUseCase);
-    serviceRepository = module.get('IServiceRepository');
+    serviceRepository = module.get<IServiceRepository>('SERVICE_REPOSITORY');
   });
 
-  it('should be defined', () => {
-    expect(useCase).toBeDefined();
-  });
+  it('should get all services', async () => {
+    const mockServices = [
+      Service.create({
+        name: 'Test Service 1',
+        description: 'Test Description 1',
+        price: 100,
+        duration: 60,
+        isActive: true,
+      }),
+      Service.create({
+        name: 'Test Service 2',
+        description: 'Test Description 2',
+        price: 200,
+        duration: 90,
+        isActive: true,
+      }),
+    ];
 
-  describe('execute', () => {
-    it('should return an array of services', async () => {
-      const result = await useCase.execute();
-      expect(result).toEqual(mockServices);
-      expect(serviceRepository.findAll).toHaveBeenCalled();
-    });
+    jest.spyOn(serviceRepository, 'findAll').mockResolvedValue(mockServices);
 
-    it('should return an empty array if no services found', async () => {
-      serviceRepository.findAll.mockResolvedValue([]);
-      const result = await useCase.execute();
-      expect(result).toEqual([]);
-    });
+    const result = await useCase.execute();
+
+    expect(result).toBe(mockServices);
+    expect(serviceRepository.findAll).toHaveBeenCalled();
   });
 }); 

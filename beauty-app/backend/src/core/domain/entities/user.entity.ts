@@ -1,30 +1,56 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Role } from '../enums/role.enum';
+import { Entity } from './entity';
+import { UserRole } from '../enums/user-role.enum';
 
-@Entity('users')
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ unique: true })
+export interface UserProps {
   email: string;
-
-  @Column()
   password: string;
+  firstName?: string;
+  lastName?: string;
+  role: UserRole;
+  name?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
-  @Column()
-  name: string;
+export class User extends Entity<UserProps> {
+  private constructor(props: UserProps, id?: string) {
+    super(props, id);
+  }
 
-  @Column({
-    type: 'enum',
-    enum: Role,
-    default: Role.USER,
-  })
-  role: Role;
+  public static create(props: UserProps, id?: string): User {
+    const user = new User(props, id);
+    return user;
+  }
 
-  @CreateDateColumn()
-  createdAt: Date;
+  get email(): string {
+    return this.props.email;
+  }
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  get password(): string {
+    return this.props.password;
+  }
+
+  get firstName(): string | undefined {
+    return this.props.firstName;
+  }
+
+  get lastName(): string | undefined {
+    return this.props.lastName;
+  }
+
+  get role(): UserRole {
+    return this.props.role;
+  }
+
+  get name(): string {
+    return this.props.name || `${this.props.firstName || ''} ${this.props.lastName || ''}`.trim();
+  }
+
+  get createdAt(): Date {
+    return this.props.createdAt || new Date();
+  }
+
+  get updatedAt(): Date {
+    return this.props.updatedAt || new Date();
+  }
 } 

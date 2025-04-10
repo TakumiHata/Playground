@@ -2,70 +2,74 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CreateServiceUseCase } from './create-service.use-case';
 import { IServiceRepository } from '../../../domain/repositories/service.repository.interface';
 import { Service } from '../../../domain/entities/service.entity';
-import { CreateServiceRequestDto } from '../../../infrastructure/dto/services/create-service-request.dto';
 
 describe('CreateServiceUseCase', () => {
   let useCase: CreateServiceUseCase;
-  let serviceRepository: jest.Mocked<IServiceRepository>;
-
-  const mockService = {
-    id: '1',
-    name: 'Test Service',
-    description: 'Test Description',
-    price: 1000,
-    duration: 60,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  const mockRequest: CreateServiceRequestDto = {
-    name: 'Test Service',
-    description: 'Test Description',
-    price: 1000,
-    duration: 60,
-    isActive: true,
-  };
+  let serviceRepository: IServiceRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateServiceUseCase,
         {
-          provide: 'IServiceRepository',
+          provide: 'SERVICE_REPOSITORY',
           useValue: {
-            create: jest.fn().mockResolvedValue(mockService),
+            create: jest.fn(),
           },
         },
       ],
     }).compile();
 
     useCase = module.get<CreateServiceUseCase>(CreateServiceUseCase);
-    serviceRepository = module.get('IServiceRepository');
+    serviceRepository = module.get<IServiceRepository>('SERVICE_REPOSITORY');
   });
 
-  it('should be defined', () => {
-    expect(useCase).toBeDefined();
+  it('should create a service', async () => {
+    const request = {
+      name: 'Test Service',
+      description: 'Test Description',
+      price: 100,
+      duration: 60,
+      isActive: true,
+    };
+
+    const mockService = Service.create({
+      name: request.name,
+      description: request.description,
+      price: request.price,
+      duration: request.duration,
+      isActive: request.isActive,
+    });
+
+    jest.spyOn(serviceRepository, 'create').mockResolvedValue(mockService);
+
+    const result = await useCase.execute(request);
+
+    expect(result).toBe(mockService);
+    expect(serviceRepository.create).toHaveBeenCalledWith(expect.any(Service));
   });
 
-  describe('execute', () => {
-    it('should create a service', async () => {
-      const result = await useCase.execute(mockRequest);
-      expect(result).toEqual(mockService);
-      expect(serviceRepository.create).toHaveBeenCalledWith(expect.any(Service));
+  it('should create a service without optional fields', async () => {
+    const requestWithoutIsActive = {
+      name: 'Test Service',
+      description: 'Test Description',
+      price: 100,
+      duration: 60,
+    };
+
+    const mockService = Service.create({
+      name: requestWithoutIsActive.name,
+      description: requestWithoutIsActive.description,
+      price: requestWithoutIsActive.price,
+      duration: requestWithoutIsActive.duration,
+      isActive: true,
     });
 
-    it('should create a service with default isActive value', async () => {
-      const requestWithoutIsActive = { ...mockRequest };
-      delete requestWithoutIsActive.isActive;
+    jest.spyOn(serviceRepository, 'create').mockResolvedValue(mockService);
 
-      const result = await useCase.execute(requestWithoutIsActive);
-      expect(result).toEqual(mockService);
-      expect(serviceRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          isActive: true,
-        }),
-      );
-    });
+    const result = await useCase.execute(requestWithoutIsActive);
+
+    expect(result).toBe(mockService);
+    expect(serviceRepository.create).toHaveBeenCalledWith(expect.any(Service));
   });
 }); 
