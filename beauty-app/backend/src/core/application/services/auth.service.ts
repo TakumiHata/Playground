@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { IUserRepository } from '../../domain/repositories/user.repository.interface';
 import { LoginRequestDto } from '../dto/auth/login-request.dto';
-import { LoginResponseDto } from '../dto/auth/login-response.dto';
+import { LoginResponseDto, UserResponseDto } from '../dto/auth/login-response.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -31,11 +31,17 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
-    return {
+    const userResponse: UserResponseDto = {
       id: user.id,
       email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
       role: user.role,
+    };
+
+    return {
       accessToken,
+      user: userResponse,
     };
   }
 } 

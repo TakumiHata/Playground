@@ -4,10 +4,9 @@ import { UserRole } from '../enums/user-role.enum';
 export interface UserProps {
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
   role: UserRole;
-  name?: string;
+  firstName: string;
+  lastName: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -18,8 +17,7 @@ export class User extends Entity<UserProps> {
   }
 
   public static create(props: UserProps, id?: string): User {
-    const user = new User(props, id);
-    return user;
+    return new User(props, id);
   }
 
   get email(): string {
@@ -30,20 +28,16 @@ export class User extends Entity<UserProps> {
     return this.props.password;
   }
 
-  get firstName(): string | undefined {
-    return this.props.firstName;
-  }
-
-  get lastName(): string | undefined {
-    return this.props.lastName;
-  }
-
   get role(): UserRole {
     return this.props.role;
   }
 
-  get name(): string {
-    return this.props.name || `${this.props.firstName || ''} ${this.props.lastName || ''}`.trim();
+  get firstName(): string {
+    return this.props.firstName;
+  }
+
+  get lastName(): string {
+    return this.props.lastName;
   }
 
   get createdAt(): Date {

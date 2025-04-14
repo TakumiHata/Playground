@@ -1,5 +1,5 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
-import { Role } from '../../../domain/enums/role.enum';
+import { UserRole } from '../../../../domain/enums/user-role.enum';
 
 export class CreateUsers1710000000001 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -24,22 +24,26 @@ export class CreateUsers1710000000001 implements MigrationInterface {
             type: 'varchar',
           },
           {
-            name: 'name',
+            name: 'role',
+            type: 'enum',
+            enum: Object.values(UserRole),
+            default: `'${UserRole.USER}'`,
+          },
+          {
+            name: 'firstName',
             type: 'varchar',
           },
           {
-            name: 'role',
-            type: 'enum',
-            enum: Object.values(Role),
-            default: `'${Role.USER}'`,
+            name: 'lastName',
+            type: 'varchar',
           },
           {
-            name: 'created_at',
+            name: 'createdAt',
             type: 'timestamp',
             default: 'now()',
           },
           {
-            name: 'updated_at',
+            name: 'updatedAt',
             type: 'timestamp',
             default: 'now()',
           },

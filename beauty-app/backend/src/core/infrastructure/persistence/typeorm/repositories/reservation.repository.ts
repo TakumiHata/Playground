@@ -62,55 +62,55 @@ export class TypeOrmReservationRepository implements IReservationRepository {
     await this.repository.delete(id);
   }
 
-  private toSchema(reservation: Reservation): Omit<ReservationSchema, 'user' | 'staff' | 'service'> & {
-    user?: Partial<UserSchema>;
-    staff?: Partial<UserSchema>;
-    service?: Partial<ServiceSchema>;
-  } {
-    const schema: Partial<ReservationSchema> = {
-      id: reservation.id,
-      userId: reservation.userId,
-      serviceId: reservation.serviceId,
-      staffId: reservation.staffId,
-      date: reservation.date,
-      startTime: reservation.startTime,
-      endTime: reservation.endTime,
-      status: reservation.status,
-      notes: reservation.notes,
-    };
+  private toSchema(reservation: Reservation): ReservationSchema {
+    const schema = new ReservationSchema();
+    schema.id = reservation.id;
+    schema.userId = reservation.userId;
+    schema.serviceId = reservation.serviceId;
+    schema.date = reservation.date;
+    schema.startTime = reservation.startTime;
+    schema.endTime = reservation.endTime;
+    schema.status = reservation.status;
+    schema.createdAt = reservation.createdAt || new Date();
+    schema.updatedAt = reservation.updatedAt || new Date();
 
     if (reservation.user) {
-      schema.user = this.userDomainToSchema(reservation.user);
-    }
-
-    if (reservation.staff) {
-      schema.staff = this.userDomainToSchema(reservation.staff);
+      const userSchema = new UserSchema();
+      userSchema.id = reservation.user.id || '';
+      userSchema.email = reservation.user.email;
+      userSchema.firstName = reservation.user.firstName || '';
+      userSchema.lastName = reservation.user.lastName || '';
+      userSchema.role = reservation.user.role;
+      schema.user = userSchema;
     }
 
     if (reservation.service) {
-      schema.service = this.serviceDomainToSchema(reservation.service);
+      const serviceSchema = new ServiceSchema();
+      serviceSchema.id = reservation.service.id || '';
+      serviceSchema.name = reservation.service.name;
+      serviceSchema.description = reservation.service.description || '';
+      serviceSchema.price = reservation.service.price;
+      serviceSchema.duration = reservation.service.duration;
+      serviceSchema.isActive = reservation.service.isActive;
+      schema.service = serviceSchema;
     }
 
-    return schema as Omit<ReservationSchema, 'user' | 'staff' | 'service'> & {
-      user?: Partial<UserSchema>;
-      staff?: Partial<UserSchema>;
-      service?: Partial<ServiceSchema>;
-    };
+    return schema;
   }
 
   private toDomain(schema: ReservationSchema): Reservation {
+    const user = schema.user ? this.userSchemaToDomain(schema.user as UserSchema) : undefined;
+    const service = schema.service ? this.serviceSchemaToDomain(schema.service as ServiceSchema) : undefined;
+
     return Reservation.create({
       userId: schema.userId,
       serviceId: schema.serviceId,
-      staffId: schema.staffId,
       date: schema.date,
       startTime: schema.startTime,
       endTime: schema.endTime,
       status: schema.status,
-      notes: schema.notes,
-      user: schema.user ? this.userSchemaToDomain(schema.user as UserSchema) : undefined,
-      staff: schema.staff ? this.userSchemaToDomain(schema.staff as UserSchema) : undefined,
-      service: schema.service ? this.serviceSchemaToDomain(schema.service as ServiceSchema) : undefined,
+      user,
+      service,
       createdAt: schema.createdAt,
       updatedAt: schema.updatedAt,
     }, schema.id);
@@ -120,51 +120,23 @@ export class TypeOrmReservationRepository implements IReservationRepository {
     return User.create({
       email: schema.email,
       password: schema.password,
-      firstName: schema.firstName,
-      lastName: schema.lastName,
+      firstName: schema.firstName || '',
+      lastName: schema.lastName || '',
       role: schema.role,
       createdAt: schema.createdAt,
       updatedAt: schema.updatedAt,
     }, schema.id);
   }
 
-  private userDomainToSchema(user: User): UserSchema {
-    const schema = new UserSchema();
-    if (user.id) {
-      schema.id = user.id;
-    }
-    schema.email = user.email;
-    schema.password = user.password;
-    schema.firstName = user.firstName;
-    schema.lastName = user.lastName;
-    schema.role = user.role;
-    schema.createdAt = user.createdAt;
-    schema.updatedAt = user.updatedAt;
-    return schema;
-  }
-
   private serviceSchemaToDomain(schema: ServiceSchema): Service {
     return Service.create({
       name: schema.name,
-      description: schema.description,
+      description: schema.description || '',
       price: schema.price,
       duration: schema.duration,
       isActive: schema.isActive,
       createdAt: schema.createdAt,
       updatedAt: schema.updatedAt,
     }, schema.id);
-  }
-
-  private serviceDomainToSchema(service: Service): Partial<ServiceSchema> {
-    const schema = new ServiceSchema();
-    schema.id = service.id;
-    schema.name = service.name;
-    schema.description = service.description;
-    schema.price = service.price;
-    schema.duration = service.duration;
-    schema.isActive = service.isActive;
-    schema.createdAt = service.createdAt;
-    schema.updatedAt = service.updatedAt;
-    return schema;
   }
 } 

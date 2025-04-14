@@ -5,7 +5,6 @@ export interface IReservationRepository {
   findById(id: string): Promise<Reservation | null>;
   findAll(): Promise<Reservation[]>;
   findByDateRange(startDate: Date, endDate: Date): Promise<Reservation[]>;
-  findByStaffId(staffId: string): Promise<Reservation[]>;
   findByUserId(userId: string): Promise<Reservation[]>;
   update(id: string, reservation: Reservation): Promise<Reservation>;
   delete(id: string): Promise<void>;

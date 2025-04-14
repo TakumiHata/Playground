@@ -1,14 +1,20 @@
 import { Entity } from './entity';
+import { Service } from './service.entity';
+import { User } from './user.entity';
 import { ReservationStatus } from '../enums/reservation-status.enum';
 
 export interface ReservationProps {
   userId: string;
   serviceId: string;
+  staffId?: string;
   date: Date;
   startTime: Date;
   endTime: Date;
   status: ReservationStatus;
   notes?: string;
+  user?: User;
+  staff?: User;
+  service?: Service;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -19,8 +25,7 @@ export class Reservation extends Entity<ReservationProps> {
   }
 
   public static create(props: ReservationProps, id?: string): Reservation {
-    const reservation = new Reservation(props, id);
-    return reservation;
+    return new Reservation(props, id);
   }
 
   get userId(): string {
@@ -29,6 +34,10 @@ export class Reservation extends Entity<ReservationProps> {
 
   get serviceId(): string {
     return this.props.serviceId;
+  }
+
+  get staffId(): string | undefined {
+    return this.props.staffId;
   }
 
   get date(): Date {
@@ -51,22 +60,51 @@ export class Reservation extends Entity<ReservationProps> {
     return this.props.notes;
   }
 
-  get createdAt(): Date {
-    return this.props.createdAt || new Date();
+  get user(): User | undefined {
+    return this.props.user;
   }
 
-  get updatedAt(): Date {
-    return this.props.updatedAt || new Date();
+  get staff(): User | undefined {
+    return this.props.staff;
   }
 
-  public updateStatus(status: ReservationStatus): void {
-    this.props.status = status;
-    this.props.updatedAt = new Date();
+  get service(): Service | undefined {
+    return this.props.service;
   }
 
-  public updateNotes(notes: string): void {
-    this.props.notes = notes;
-    this.props.updatedAt = new Date();
+  get createdAt(): Date | undefined {
+    return this.props.createdAt;
   }
-} 
+
+  get updatedAt(): Date | undefined {
+    return this.props.updatedAt;
+  }
+
+  confirm(): void {
+    this.props.status = ReservationStatus.CONFIRMED;
+  }
+
+  cancel(): void {
+    this.props.status = ReservationStatus.CANCELLED;
+  }
+
+  complete(): void {
+    this.props.status = ReservationStatus.COMPLETED;
+  }
+
+  isPending(): boolean {
+    return this.props.status === ReservationStatus.PENDING;
+  }
+
+  isConfirmed(): boolean {
+    return this.props.status === ReservationStatus.CONFIRMED;
+  }
+
+  isCancelled(): boolean {
+    return this.props.status === ReservationStatus.CANCELLED;
+  }
+
+  isCompleted(): boolean {
+    return this.props.status === ReservationStatus.COMPLETED;
+  }
 } 

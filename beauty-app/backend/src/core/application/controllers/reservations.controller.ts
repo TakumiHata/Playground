@@ -9,6 +9,8 @@ import { JwtAuthGuard } from '../../shared/auth/guards/jwt-auth.guard';
 import { Roles } from '../../shared/auth/decorators/roles.decorator';
 import { UserRole } from '../../domain/enums/user-role.enum';
 import { RolesGuard } from '../../shared/auth/guards/roles.guard';
+import { GetReservationsRequest } from '../use-cases/reservations/get-reservations.use-case';
+import { CurrentUser } from '../../shared/auth/decorators/current-user.decorator';
 
 interface RequestWithUser extends Request {
   user: {
@@ -29,18 +31,21 @@ export class ReservationsController {
   ) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
   async getReservations(
-    @Request() req: RequestWithUser,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-    @Query('staffId') staffId?: string,
+    @Query('userId') userId?: string,
+    @CurrentUser() req?: any,
   ) {
-    return this.getReservationsUseCase.execute({
-      userId: req.user.role === UserRole.USER ? req.user.id : undefined,
-      staffId: req.user.role === UserRole.STAFF ? req.user.id : staffId,
+    const request: GetReservationsRequest = {
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
-    });
+      userId: req.user.role === UserRole.STAFF ? req.user.id : userId,
+    };
+
+    return this.getReservationsUseCase.execute(request);
   }
 
   @Post()

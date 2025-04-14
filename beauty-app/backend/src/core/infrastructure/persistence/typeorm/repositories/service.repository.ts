@@ -45,7 +45,7 @@ export class TypeOrmServiceRepository implements IServiceRepository {
   private toSchema(service: Service): ServiceSchema {
     const schema = new ServiceSchema();
     schema.name = service.name;
-    schema.description = service.description;
+    schema.description = service.description || null;
     schema.price = service.price;
     schema.duration = service.duration;
     schema.isActive = service.isActive;

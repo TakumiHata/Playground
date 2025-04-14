@@ -1,26 +1,26 @@
-import { IsString, IsDate, IsOptional } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsDate, IsEnum, IsOptional, IsNotEmpty } from 'class-validator';
+import { ReservationStatus } from '../../domain/enums/reservation-status.enum';
 
-export class CreateReservationDto {
+export class CreateReservationRequestDto {
   @IsString()
+  @IsNotEmpty()
   userId: string;
 
   @IsString()
+  @IsNotEmpty()
   serviceId: string;
 
   @IsDate()
-  @Type(() => Date)
+  @IsNotEmpty()
   date: Date;
 
   @IsDate()
-  @Type(() => Date)
   startTime: Date;
 
   @IsDate()
-  @Type(() => Date)
   endTime: Date;
 
-  @IsString()
+  @IsEnum(ReservationStatus)
   @IsOptional()
-  notes?: string;
+  status?: ReservationStatus;
 } 

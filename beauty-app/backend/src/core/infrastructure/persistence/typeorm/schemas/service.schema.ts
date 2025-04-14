@@ -9,7 +9,7 @@ export class ServiceSchema {
   name: string;
 
   @Column({ nullable: true })
-  description: string;
+  description: string | null;
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;

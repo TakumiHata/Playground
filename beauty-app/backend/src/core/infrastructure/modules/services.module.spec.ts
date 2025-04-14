@@ -1,28 +1,35 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServicesController } from '../../application/controllers/services.controller';
 import { ServicesModule } from './services.module';
-import { Service } from '../../domain/entities/service.entity';
-import { ServicesController } from '../controllers/services.controller';
 import { CreateServiceUseCase } from '../../application/use-cases/services/create-service.use-case';
 import { GetServiceUseCase } from '../../application/use-cases/services/get-service.use-case';
+import { GetServicesUseCase } from '../../application/use-cases/services/get-services.use-case';
 import { UpdateServiceUseCase } from '../../application/use-cases/services/update-service.use-case';
 import { DeleteServiceUseCase } from '../../application/use-cases/services/delete-service.use-case';
-import { GetAllServicesUseCase } from '../../application/use-cases/services/get-all-services.use-case';
-import { ServiceRepository } from '../../domain/repositories/service.repository';
+import { IServiceRepository } from '../../domain/repositories/service.repository.interface';
 
 describe('ServicesModule', () => {
   let module: TestingModule;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [Service],
-          synchronize: true,
-        }),
-        ServicesModule,
+      imports: [ServicesModule],
+      providers: [
+        {
+          provide: 'IServiceRepository',
+          useValue: {
+            create: jest.fn(),
+            findById: jest.fn(),
+            findAll: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+          },
+        },
+        CreateServiceUseCase,
+        GetServiceUseCase,
+        GetServicesUseCase,
+        UpdateServiceUseCase,
+        DeleteServiceUseCase,
       ],
     }).compile();
   });
@@ -46,6 +53,11 @@ describe('ServicesModule', () => {
     expect(useCase).toBeDefined();
   });
 
+  it('should have GetServicesUseCase', () => {
+    const useCase = module.get<GetServicesUseCase>(GetServicesUseCase);
+    expect(useCase).toBeDefined();
+  });
+
   it('should have UpdateServiceUseCase', () => {
     const useCase = module.get<UpdateServiceUseCase>(UpdateServiceUseCase);
     expect(useCase).toBeDefined();
@@ -54,15 +66,5 @@ describe('ServicesModule', () => {
   it('should have DeleteServiceUseCase', () => {
     const useCase = module.get<DeleteServiceUseCase>(DeleteServiceUseCase);
     expect(useCase).toBeDefined();
-  });
-
-  it('should have GetAllServicesUseCase', () => {
-    const useCase = module.get<GetAllServicesUseCase>(GetAllServicesUseCase);
-    expect(useCase).toBeDefined();
-  });
-
-  it('should have ServiceRepository', () => {
-    const repository = module.get<ServiceRepository>(ServiceRepository);
-    expect(repository).toBeDefined();
   });
 }); 

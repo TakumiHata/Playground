@@ -2,7 +2,7 @@ import { Entity } from './entity';
 
 export interface ServiceProps {
   name: string;
-  description?: string;
+  description: string | null;
   price: number;
   duration: number;
   isActive: boolean;
@@ -24,7 +24,7 @@ export class Service extends Entity<ServiceProps> {
     return this.props.name;
   }
 
-  get description(): string | undefined {
+  get description(): string | null {
     return this.props.description;
   }
 

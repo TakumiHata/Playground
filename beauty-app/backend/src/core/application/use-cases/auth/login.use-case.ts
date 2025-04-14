@@ -1,23 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
-import { User } from '../../../domain/entities/user.entity';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
+import { LoginRequestDto } from '../../../application/dto/auth/login-request.dto';
+import { LoginResponseDto } from '../../../application/dto/auth/login-response.dto';
 import { compare } from 'bcrypt';
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-  };
-  accessToken: string;
-}
 
 @Injectable()
 export class LoginUseCase {
@@ -26,17 +12,17 @@ export class LoginUseCase {
     private readonly jwtService: JwtService,
   ) {}
 
-  async execute(request: LoginRequest): Promise<LoginResponse> {
-    const user = await this.userRepository.findByEmail(request.email);
-    
+  async execute(loginDto: LoginRequestDto): Promise<LoginResponseDto> {
+    const { email, password } = loginDto;
+
+    const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await compare(request.password, user.password);
-    
+    const isPasswordValid = await compare(password, user.password);
     if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const payload = {
@@ -48,13 +34,14 @@ export class LoginUseCase {
     const accessToken = this.jwtService.sign(payload);
 
     return {
+      accessToken,
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
       },
-      accessToken,
     };
   }
 } 
