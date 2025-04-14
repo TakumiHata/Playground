@@ -42,15 +42,15 @@ export class ReservationSchema {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => UserSchema)
+  @ManyToOne(() => UserSchema, { eager: true, nullable: true })
   @JoinColumn({ name: 'userId' })
-  user: UserSchema;
+  user?: Partial<UserSchema>;
 
-  @ManyToOne(() => UserSchema)
+  @ManyToOne(() => UserSchema, { eager: true, nullable: true })
   @JoinColumn({ name: 'staffId' })
-  staff?: UserSchema;
+  staff?: Partial<UserSchema>;
 
-  @ManyToOne(() => ServiceSchema)
+  @ManyToOne(() => ServiceSchema, { eager: true, nullable: true })
   @JoinColumn({ name: 'serviceId' })
-  service: ServiceSchema;
+  service?: Partial<ServiceSchema>;
 } 

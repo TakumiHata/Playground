@@ -4,7 +4,7 @@ import { UserRole } from '../../../../domain/enums/user-role.enum';
 @Entity('users')
 export class UserSchema {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: string | undefined;
 
   @Column({ unique: true })
   email: string;
@@ -19,11 +19,11 @@ export class UserSchema {
   })
   role: UserRole;
 
-  @Column({ nullable: true })
-  firstName?: string;
+  @Column()
+  firstName: string;
 
-  @Column({ nullable: true })
-  lastName?: string;
+  @Column()
+  lastName: string;
 
   @CreateDateColumn()
   createdAt: Date;
