@@ -16,7 +16,6 @@ export class ServicesService {
         price: createServiceDto.price,
         duration: createServiceDto.duration,
         category: createServiceDto.category,
-        isActive: createServiceDto.isActive ?? true,
       },
     });
     return this.mapToResponseDto(service);
