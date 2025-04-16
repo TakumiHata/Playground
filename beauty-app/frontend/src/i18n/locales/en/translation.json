@@ -1,0 +1,42 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?"
+  },
+  "reservation": {
+    "title": "Reservations",
+    "new": "New Reservation",
+    "edit": "Edit Reservation",
+    "delete": "Delete Reservation",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "completed": "Completed"
+    }
+  },
+  "service": {
+    "title": "Services",
+    "new": "New Service",
+    "edit": "Edit Service",
+    "delete": "Delete Service",
+    "name": "Service Name",
+    "description": "Description",
+    "price": "Price",
+    "duration": "Duration (minutes)"
+  }
+} 
