@@ -17,9 +17,9 @@ export const sessionMiddleware = session({
   resave: false,
   saveUninitialized: false,
   store: new PrismaSessionStore(
-    prisma,
+    prisma as any,
     {
-      checkPeriod: 2 * 60 * 1000, // 2分ごとに期限切れセッションをチェック
+      checkPeriod: 2 * 60 * 1000,
       dbRecordIdIsSessionId: true,
       dbRecordIdFunction: undefined,
     }
@@ -28,7 +28,7 @@ export const sessionMiddleware = session({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge: 24 * 60 * 60 * 1000, // 24時間
+    maxAge: 24 * 60 * 60 * 1000,
   },
 });
 
