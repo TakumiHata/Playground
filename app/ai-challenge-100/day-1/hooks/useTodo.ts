@@ -1,60 +1,63 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
 import { Todo } from '../types';
 
-const STORAGE_KEY = 'todos';
+export function useTodo() {
+  const [todos, setTodos] = useState<Todo[]>([]);
 
-export const useTodo = () => {
-  const [todos, setTodos] = useState<Todo[]>(() => {
-    // ローカルストレージからTODOリストを読み込む
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
-
-  // TODOリストが更新されたらローカルストレージに保存
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    const savedTodos = localStorage.getItem('todos');
+    if (savedTodos) {
+      setTodos(JSON.parse(savedTodos));
     }
-  }, [todos]);
+  }, []);
 
-  const addTodo = (text: string) => {
+  const addTodo = useCallback((text: string) => {
     const newTodo: Todo = {
-      id: Date.now(),
+      id: Date.now().toString(),
       text,
       completed: false,
     };
-    setTodos([...todos, newTodo]);
-  };
+    setTodos(prevTodos => {
+      const updatedTodos = [...prevTodos, newTodo];
+      localStorage.setItem('todos', JSON.stringify(updatedTodos));
+      return updatedTodos;
+    });
+  }, []);
 
-  const toggleTodo = (id: number) => {
-    setTodos(
-      todos.map((todo) =>
+  const toggleTodo = useCallback((id: string) => {
+    setTodos(prevTodos => {
+      const updatedTodos = prevTodos.map(todo =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
-  };
+      );
+      localStorage.setItem('todos', JSON.stringify(updatedTodos));
+      return updatedTodos;
+    });
+  }, []);
 
-  const deleteTodo = (id: number) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
-  };
+  const deleteTodo = useCallback((id: string) => {
+    setTodos(prevTodos => {
+      const updatedTodos = prevTodos.filter(todo => todo.id !== id);
+      localStorage.setItem('todos', JSON.stringify(updatedTodos));
+      return updatedTodos;
+    });
+  }, []);
 
-  const editTodo = (id: number, newText: string) => {
-    setTodos(
-      todos.map((todo) =>
+  const editTodo = useCallback((id: string, newText: string) => {
+    setTodos(prevTodos => {
+      const updatedTodos = prevTodos.map(todo =>
         todo.id === id ? { ...todo, text: newText } : todo
-      )
-    );
-  };
+      );
+      localStorage.setItem('todos', JSON.stringify(updatedTodos));
+      return updatedTodos;
+    });
+  }, []);
 
-  const reorderTodos = (startIndex: number, endIndex: number) => {
-    const result = Array.from(todos);
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    setTodos(result);
-  };
+  const reorderTodos = useCallback((todos: Todo[]) => {
+    setTodos(todos);
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }, []);
 
   return {
     todos,
@@ -64,4 +67,4 @@ export const useTodo = () => {
     editTodo,
     reorderTodos,
   };
-}; 
+} 

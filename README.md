@@ -21,20 +21,23 @@ AIを活用して100日間で100個のアプリケーションを開発するチ
   - ラップタイム記録
 
 ## 技術スタック
-- Next.js 14
+- Next.js 14 (App Router)
 - TypeScript
 - Tailwind CSS
 - React Hooks
+- LocalStorage API
 
 ## プロジェクト構造
 ```
 /
-├── app/                    # Next.jsアプリケーション
+├── app/                    # Next.js App Router
 │   ├── ai-challenge-100/   # 100本ノック用ディレクトリ
 │   │   ├── day-1/         # Day 1: TODOリスト
 │   │   └── day-2/         # Day 2: デジタルタイマー
 ├── docs/                   # ドキュメント
 │   └── implementation_plan.md
+├── lib/                    # ユーティリティ関数
+├── public/                 # 静的ファイル
 └── README.md
 ```
 

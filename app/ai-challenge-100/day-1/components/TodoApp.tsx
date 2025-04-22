@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import { TodoList } from './TodoList';
-import { TodoFilter } from './TodoFilter';
+'use client';
+
+import { useState, useMemo } from 'react';
+import TodoList from './TodoList';
+import TodoFilter from './TodoFilter';
 import { useTodo } from '../hooks/useTodo';
 import { FilterType } from '../types';
 
-export const TodoApp: React.FC = () => {
+export default function TodoApp() {
   const [newTodo, setNewTodo] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
   const { todos, addTodo, toggleTodo, deleteTodo, editTodo, reorderTodos } = useTodo();
@@ -64,4 +66,4 @@ export const TodoApp: React.FC = () => {
       />
     </div>
   );
-}; 
+} 

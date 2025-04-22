@@ -1,136 +1,65 @@
-import React, { useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+'use client';
+
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Todo } from '../types';
+import { TodoListProps } from '../types';
 
-interface TodoListProps {
-  todos: Todo[];
-  onToggle: (id: number) => void;
-  onDelete: (id: number) => void;
-  onEdit: (id: number, newText: string) => void;
-  onReorder: (startIndex: number, endIndex: number) => void;
-}
-
-export const TodoList: React.FC<TodoListProps> = ({
-  todos,
-  onToggle,
-  onDelete,
-  onEdit,
-  onReorder,
-}) => {
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editText, setEditText] = useState('');
-
-  const handleEditStart = (todo: Todo) => {
-    setEditingId(todo.id);
-    setEditText(todo.text);
-  };
-
-  const handleEditSave = (id: number) => {
-    if (editText.trim()) {
-      onEdit(id, editText.trim());
-      setEditingId(null);
-    }
-  };
-
-  const handleEditCancel = () => {
-    setEditingId(null);
-    setEditText('');
-  };
-
-  const handleDragEnd = (result: any) => {
+export default function TodoList({ todos, onToggle, onDelete, onReorder }: TodoListProps) {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-    onReorder(result.source.index, result.destination.index);
-  };
 
-  if (todos.length === 0) {
-    return (
-      <div className="text-center text-gray-500 mt-4">
-        TODOがありません
-      </div>
-    );
-  }
+    const items = Array.from(todos);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    onReorder(items);
+  };
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="todos">
         {(provided) => (
-          <ul
+          <div
             {...provided.droppableProps}
             ref={provided.innerRef}
             className="space-y-2"
           >
             {todos.map((todo, index) => (
-              <Draggable
-                key={todo.id}
-                draggableId={todo.id.toString()}
-                index={index}
-              >
+              <Draggable key={todo.id} draggableId={todo.id} index={index}>
                 {(provided) => (
-                  <li
+                  <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="flex items-center justify-between p-2 bg-white border rounded"
+                    className="flex items-center p-4 bg-white rounded-lg shadow"
                   >
-                    {editingId === todo.id ? (
-                      <div className="flex items-center flex-1 mr-2">
-                        <input
-                          type="text"
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
-                          className="flex-1 p-1 border rounded mr-2"
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => handleEditSave(todo.id)}
-                          className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 mr-2"
-                        >
-                          保存
-                        </button>
-                        <button
-                          onClick={handleEditCancel}
-                          className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-                        >
-                          キャンセル
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={todo.completed}
-                            onChange={() => onToggle(todo.id)}
-                            className="mr-2"
-                          />
-                          <span className={todo.completed ? 'line-through text-gray-500' : ''}>
-                            {todo.text}
-                          </span>
-                        </div>
-                        <div>
-                          <button
-                            onClick={() => handleEditStart(todo)}
-                            className="text-blue-500 hover:text-blue-700 mr-2"
-                          >
-                            編集
-                          </button>
-                          <button
-                            onClick={() => onDelete(todo.id)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            削除
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </li>
+                    <input
+                      type="checkbox"
+                      checked={todo.completed}
+                      onChange={() => onToggle(todo.id)}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <span
+                      className={`ml-3 ${
+                        todo.completed ? 'line-through text-gray-500' : 'text-gray-900'
+                      }`}
+                    >
+                      {todo.text}
+                    </span>
+                    <button
+                      onClick={() => onDelete(todo.id)}
+                      className="ml-auto text-red-600 hover:text-red-800"
+                    >
+                      削除
+                    </button>
+                  </div>
                 )}
               </Draggable>
             ))}
             {provided.placeholder}
-          </ul>
+          </div>
         )}
       </Droppable>
     </DragDropContext>
   );
-}; 
+} 
