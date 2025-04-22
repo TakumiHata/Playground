@@ -1,55 +1,62 @@
-# Playground
+# AI駆動開発100本ノック
 
-このリポジトリには、様々なプロジェクトが含まれています。
+## 概要
+AIを活用して100日間で100個のアプリケーションを開発するチャレンジです。各アプリは1日で完成できる規模に設計されており、初級から上級まで段階的に難易度が上がっていきます。
 
-## プロジェクト一覧
+## 現在の進捗
 
-### Beauty App
-美容系アプリケーション（開発中）
+### Day 1: シンプルTODOリストアプリ ✅
+- 実装済み機能
+  - タスクの追加・編集・削除
+  - タスクの完了/未完了の切り替え
+  - ローカルストレージを使用したデータの永続化
+  - レスポンシブデザイン
+  - アクセシビリティ対応
 
-#### 技術スタック
-- フロントエンド: React + TypeScript + Material-UI
-- バックエンド: NestJS + TypeScript
-- データベース: MySQL (Supabase)
-- 認証: JWT
+### Day 2: デジタルタイマーアプリ 🔄
+- 予定機能
+  - カウントダウンタイマー
+  - ストップウォッチ
+  - アラート機能
+  - ラップタイム記録
 
-#### 開発環境のセットアップ
+## 技術スタック
+- Next.js 14
+- TypeScript
+- Tailwind CSS
+- React Hooks
+
+## プロジェクト構造
+```
+/
+├── app/                    # Next.jsアプリケーション
+│   ├── ai-challenge-100/   # 100本ノック用ディレクトリ
+│   │   ├── day-1/         # Day 1: TODOリスト
+│   │   └── day-2/         # Day 2: デジタルタイマー
+├── docs/                   # ドキュメント
+│   └── implementation_plan.md
+└── README.md
+```
+
+## 開発環境のセットアップ
 1. リポジトリのクローン
 ```bash
 git clone [repository-url]
-cd Playground/beauty-app
+cd [repository-name]
 ```
 
-2. バックエンドのセットアップ
+2. 依存関係のインストール
 ```bash
-cd backend
-npm install
-cp .env.example .env  # 環境変数の設定
-npx prisma generate   # Prismaクライアントの生成
-```
-
-3. フロントエンドのセットアップ
-```bash
-cd ../frontend
 npm install
 ```
 
-4. 開発サーバーの起動
+3. 開発サーバーの起動
 ```bash
-# バックエンド
-cd backend
-npm run start:dev
-
-# フロントエンド（別ターミナルで）
-cd frontend
-npm start
+npm run dev
 ```
 
-#### Docker環境での実行
-```bash
-cd beauty-app
-docker-compose up -d
-```
+## 実装計画
+詳細な実装計画は[こちら](docs/implementation_plan.md)をご覧ください。
 
 ## ライセンス
 MIT
