@@ -44,6 +44,22 @@ export default function TodoApp() {
     localStorage.setItem('todos', JSON.stringify(updatedTodos));
   };
 
+  const editTodo = (id: number, newText: string) => {
+    const updatedTodos = todos.map(todo =>
+      todo.id === id ? { ...todo, text: newText } : todo
+    );
+    setTodos(updatedTodos);
+    localStorage.setItem('todos', JSON.stringify(updatedTodos));
+  };
+
+  const reorderTodos = (startIndex: number, endIndex: number) => {
+    const result = Array.from(todos);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    setTodos(result);
+    localStorage.setItem('todos', JSON.stringify(result));
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">TODOリスト</h1>
@@ -52,6 +68,8 @@ export default function TodoApp() {
         todos={todos}
         onToggle={toggleTodo}
         onDelete={deleteTodo}
+        onEdit={editTodo}
+        onReorder={reorderTodos}
       />
     </div>
   );

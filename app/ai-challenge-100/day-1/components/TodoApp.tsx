@@ -7,7 +7,7 @@ import { FilterType } from '../types';
 export const TodoApp: React.FC = () => {
   const [newTodo, setNewTodo] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
-  const { todos, addTodo, toggleTodo, deleteTodo, editTodo } = useTodo();
+  const { todos, addTodo, toggleTodo, deleteTodo, editTodo, reorderTodos } = useTodo();
 
   const filteredTodos = useMemo(() => {
     switch (filter) {
@@ -60,6 +60,7 @@ export const TodoApp: React.FC = () => {
         onToggle={toggleTodo}
         onDelete={deleteTodo}
         onEdit={editTodo}
+        onReorder={reorderTodos}
       />
     </div>
   );
