@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import TodoApp from '../components/TodoApp';
+import TodoApp from './components/TodoApp';
 
 export const metadata: Metadata = {
   title: 'TODOリスト - AI駆動開発100本ノック Day 1',
