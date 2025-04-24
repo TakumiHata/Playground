@@ -15,7 +15,7 @@ export function useTodo() {
 
   const addTodo = useCallback((text: string) => {
     const newTodo: Todo = {
-      id: Date.now().toString(),
+      id: Number(Date.now().toString()),
       text,
       completed: false,
     };
@@ -26,7 +26,7 @@ export function useTodo() {
     });
   }, []);
 
-  const toggleTodo = useCallback((id: string) => {
+  const toggleTodo = useCallback((id: number) => {
     setTodos(prevTodos => {
       const updatedTodos = prevTodos.map(todo =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
@@ -36,7 +36,7 @@ export function useTodo() {
     });
   }, []);
 
-  const deleteTodo = useCallback((id: string) => {
+  const deleteTodo = useCallback((id: number) => {
     setTodos(prevTodos => {
       const updatedTodos = prevTodos.filter(todo => todo.id !== id);
       localStorage.setItem('todos', JSON.stringify(updatedTodos));
@@ -44,7 +44,7 @@ export function useTodo() {
     });
   }, []);
 
-  const editTodo = useCallback((id: string, newText: string) => {
+  const editTodo = useCallback((id: number, newText: string) => {
     setTodos(prevTodos => {
       const updatedTodos = prevTodos.map(todo =>
         todo.id === id ? { ...todo, text: newText } : todo
