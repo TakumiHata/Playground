@@ -12,7 +12,7 @@ export default function TodoList({ todos, onToggle, onDelete, onReorder }: TodoL
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    onReorder(items);
+    onReorder(result.source.index, result.destination.index);
   };
 
   return (
@@ -25,7 +25,7 @@ export default function TodoList({ todos, onToggle, onDelete, onReorder }: TodoL
             className="space-y-2"
           >
             {todos.map((todo, index) => (
-              <Draggable key={todo.id} draggableId={todo.id} index={index}>
+              <Draggable key={todo.id} draggableId={todo.id.toString()} index={index}>
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
