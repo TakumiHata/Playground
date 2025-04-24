@@ -54,9 +54,14 @@ export function useTodo() {
     });
   }, []);
 
-  const reorderTodos = useCallback((todos: Todo[]) => {
-    setTodos(todos);
-    localStorage.setItem('todos', JSON.stringify(todos));
+  const reorderTodos = useCallback((fromIndex: number, toIndex: number) => {
+    setTodos((prevTodos) => {
+      const items = Array.from(prevTodos);
+      const [reorderedItem] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, reorderedItem);
+      localStorage.setItem('todos', JSON.stringify(items));
+      return items;
+    });
   }, []);
 
   return {
